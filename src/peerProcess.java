@@ -1,6 +1,5 @@
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
-import files.FileChunker;
 import files.FileHandler;
 
 import java.util.List;
@@ -19,16 +18,13 @@ public class peerProcess {
         CommonConfig commonConfig = CommonConfig.createConfigFromFile(COMMON_CONFIG_FILENAME);
         List<PeerInfoConfig> peerList = PeerInfoConfig.createPeerListFromFile(PEER_INFO_FILENAME);
 
-//        int peerID = Integer.parseInt(args[0]);
-//        Peer peer = new Peer(peerID, commonConfig);
-//
-//        try{
-//            peer.start(peerList);
-//        } catch (Exception e){
-//            e.printStackTrace();
-//        }
+        int peerID = Integer.parseInt(args[0]);
+        Peer peer = new Peer(peerID, commonConfig);
 
-        FileHandler fh = new FileHandler(Integer.parseInt(args[0]), commonConfig);
-        fh.aggregateAllPieces();
+        try{
+            peer.start(peerList);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
