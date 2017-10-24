@@ -2,6 +2,7 @@ package configs;
 
 import files.ConfigParser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PeerInfoConfig {
@@ -18,8 +19,15 @@ public class PeerInfoConfig {
     }
 
     public static List<PeerInfoConfig> createPeerListFromFile(String fileDir) throws Exception{
-        ConfigParser parser = new ConfigParser();
-        return parser.parsePeerInfo(fileDir);
+        List<PeerInfoConfig> peerList = new ArrayList<>();
+        try {
+            ConfigParser parser = new ConfigParser();
+            peerList = parser.parsePeerInfo(fileDir);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return peerList;
     }
 
     public int getPeerID() {
