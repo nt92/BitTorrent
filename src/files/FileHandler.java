@@ -1,7 +1,6 @@
 package files;
 
 import configs.CommonConfig;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -104,7 +103,7 @@ public class FileHandler {
     }
 
     public void chunkFile(){
-        Path path = Paths.get("src/files/SelfPortrait.gif");
+        Path path = Paths.get(this.peerDirectory + "/" + this.fileName);
         try {
             List<FilePiece> filePieces = new ArrayList<FilePiece>();
             byte[] data = Files.readAllBytes(path);
