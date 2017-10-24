@@ -64,7 +64,14 @@ public class ServerConnection {
                 int length = in.readInt();
                 byte[] request = new byte[length];
                 in.readFully(request);
-                System.out.println(request);
+
+                //TODO - create function that generates a message object given a byte array
+                Message messageResponse = null;
+                Message messageToSend = getMessageFromHandler(messageResponse);
+
+                if(messageToSend != null){
+                    outputMessage(messageToSend);
+                }
             }
         }
 
