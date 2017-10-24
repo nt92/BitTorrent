@@ -12,4 +12,8 @@ public class Message {
     public Message(byte[] bytes) {
         
     }
+
+    public MessageType getType(){
+        return type;
+    }
 }

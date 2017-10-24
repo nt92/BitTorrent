@@ -15,7 +15,8 @@ public enum MessageType {
     HAVE(4),
     BITFIELD(5),
     REQUEST(6),
-    PIECE(7);
+    PIECE(7),
+    HANDSHAKE(-1);
 
     private int value;
     private static Map map = new HashMap<>();
