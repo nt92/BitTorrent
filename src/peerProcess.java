@@ -1,6 +1,7 @@
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
 import files.FileChunker;
+import files.FileHandler;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class peerProcess {
 //            e.printStackTrace();
 //        }
 
-        FileChunker chunks = new FileChunker(1001, commonConfig);
-        chunks.chunkFile();
+        FileHandler fh = new FileHandler(Integer.parseInt(args[0]), commonConfig);
+        fh.aggregateAllPieces();
     }
 }
