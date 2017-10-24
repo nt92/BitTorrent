@@ -2,10 +2,13 @@ import configs.CommonConfig;
 import configs.PeerInfoConfig;
 import networking.ClientConnection;
 import networking.ServerConnection;
+import networking.messages.ClientMessageHandler;
+import networking.messages.Message;
+import networking.messages.ServerMessageHandler;
 
 import java.util.*;
 
-public class Peer {
+public class Peer implements ClientMessageHandler, ServerMessageHandler{
     private int peerID;
     private BitSet bitField;
     private int numPieces;
@@ -44,7 +47,7 @@ public class Peer {
     }
 
     private void startServerConnection(int port){
-        ServerConnection serverConnection = new ServerConnection();
+        ServerConnection serverConnection = new ServerConnection(this);
         new Thread(() -> {
             try {
                 serverConnection.start(port);
@@ -61,7 +64,7 @@ public class Peer {
     }
 
     private void startClientConnection(PeerInfoConfig serverInfo){
-        ClientConnection clientConnection = new ClientConnection(peerID);
+        ClientConnection clientConnection = new ClientConnection(peerID, this);
 
         connections.add(serverInfo.getPeerID());
         new Thread(() -> {
@@ -77,6 +80,61 @@ public class Peer {
                 }
             }
         }).start();
+    }
+
+    @Override
+    public Message responseForServerHandshake(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForChoke(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForUnchoke(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForInterested(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForUninterested(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForHave(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForClientBitfield(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForServerBitfield(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForRequest(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForPiece(Message message, int serverPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message responseForClientHandshake(Message message, int clientPeerID) {
+        return null;
     }
 }
 
