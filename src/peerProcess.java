@@ -27,7 +27,7 @@ public class peerProcess {
 //            e.printStackTrace();
 //        }
 
-        FileChunker chunks = new FileChunker(commonConfig);
+        FileChunker chunks = new FileChunker(1001, commonConfig);
         chunks.chunkFile();
     }
 }

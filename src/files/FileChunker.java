@@ -1,5 +1,8 @@
 package files;
 
+import java.io.FileOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
@@ -10,43 +13,44 @@ import java.util.List;
 import configs.CommonConfig;
 
 public class FileChunker{
+    private int peerID;
     private CommonConfig commonConfig;
     private String fileName;
     private int fileSize;
     private int pieceSize;
-    private List<FilePiece> filePieces;
 
-    public FileChunker(CommonConfig commonConfig){
+    public FileChunker(int peerID, CommonConfig commonConfig){
+        this.peerID = peerID;
         this.commonConfig = commonConfig;
         this.fileName = commonConfig.getFileName();
         this.fileSize = commonConfig.getFileSize();
         this.pieceSize = commonConfig.getPieceSize();
-        this.chunkFile();
     }
 
-    private void chunkFile(){
+    public void chunkFile(){
         Path path = Paths.get("src/files/SelfPortrait.gif");
         try {
-            this.filePieces = new ArrayList<FilePiece>();
+            List<FilePiece> filePieces = new ArrayList<FilePiece>();
             byte[] data = Files.readAllBytes(path);
             int i = 0;
 
             for( ; i + this.pieceSize <= this.fileSize; i += this.pieceSize){
-                this.filePieces.add(new FilePiece(i, Arrays.copyOfRange(data, i, i + this.pieceSize)));
+                filePieces.add(new FilePiece(i/this.pieceSize, Arrays.copyOfRange(data, i, i + this.pieceSize)));
             }
-            this.filePieces.add(new FilePiece(i, Arrays.copyOfRange(data, i, this.fileSize - 1)));
+            filePieces.add(new FilePiece(i/this.pieceSize, Arrays.copyOfRange(data, i, this.fileSize - 1)));
+
+            FileHandler fh = new FileHandler(this.peerID);
+            for(FilePiece piece : filePieces){
+                fh.savePiece(piece);
+            }
         } catch(Exception e) {
             e.printStackTrace();
         }
     }
-
-    public List<FilePiece> getFilePieces(){
-        return this.filePieces;
-    }
 }
 
 class FilePiece{
-    private int pieceIndex;
+    public int pieceIndex;
     public byte[] data;
 
     public FilePiece(int pieceIndex, byte[] data){
