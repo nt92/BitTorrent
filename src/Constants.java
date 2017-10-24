@@ -4,4 +4,5 @@ public class Constants {
     private final static int HANDSHAKE_PAYLOAD_SIZE = 4;
     private final static int MESSAGE_LENGTH_SIZE = 4;
     private final static int MESSAGE_TYPE_SIZE = 1;
+    private final static String FILE_DIRECTORY_PREFIX = "project/peer_";
 }
