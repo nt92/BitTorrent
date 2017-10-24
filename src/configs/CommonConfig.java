@@ -4,8 +4,6 @@ import files.ConfigParser;
 
 import java.util.Map;
 
-import static java.lang.System.exit;
-
 public class CommonConfig {
     private int numberOfPreferredNeighbors;
     private int unchokingInterval;
