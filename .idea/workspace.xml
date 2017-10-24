@@ -2,13 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="792b0e5b-a6f6-4b7c-aa76-10105c764667" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/Peer.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/configs/CommonConfig.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/configs/PeerInfoConfig.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/files/ConfigParser.java" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/Main.java" afterPath="$PROJECT_DIR$/src/peerProcess.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/configs/CommonConfig.java" afterPath="$PROJECT_DIR$/src/configs/CommonConfig.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/configs/PeerInfoConfig.java" afterPath="$PROJECT_DIR$/src/configs/PeerInfoConfig.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/peerProcess.java" afterPath="$PROJECT_DIR$/src/peerProcess.java" />
     </list>
     <ignored path="BitTorrent.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -39,17 +35,43 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="peerProcess.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="peerProcess.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/peerProcess.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="3" column="0" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
-              <folding />
+            <state relative-caret-position="330">
+              <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Peer.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="PeerInfoConfig.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/configs/PeerInfoConfig.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="420">
+              <caret line="28" column="0" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CommonConfig.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/configs/CommonConfig.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="896">
+              <caret line="67" column="32" selection-start-line="67" selection-start-column="32" selection-end-line="67" selection-end-column="32" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Peer.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Peer.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="15">
@@ -81,11 +103,11 @@
       <list>
         <option value="$PROJECT_DIR$/src/configs/Common.cfg" />
         <option value="$PROJECT_DIR$/src/configs/PeerInfo.cfg" />
+        <option value="$PROJECT_DIR$/src/files/ConfigParser.java" />
+        <option value="$PROJECT_DIR$/src/Peer.java" />
         <option value="$PROJECT_DIR$/src/configs/CommonConfig.java" />
         <option value="$PROJECT_DIR$/src/configs/PeerInfoConfig.java" />
-        <option value="$PROJECT_DIR$/src/files/ConfigParser.java" />
         <option value="$PROJECT_DIR$/src/peerProcess.java" />
-        <option value="$PROJECT_DIR$/src/Peer.java" />
       </list>
     </option>
   </component>
@@ -575,41 +597,41 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/configs/PeerInfoConfig.java">
+    <entry file="file://$PROJECT_DIR$/src/Peer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="330">
-          <caret line="22" column="5" selection-start-line="22" selection-start-column="5" selection-end-line="22" selection-end-column="5" />
+        <state relative-caret-position="15">
+          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/configs/CommonConfig.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="896">
+          <caret line="67" column="32" selection-start-line="67" selection-start-column="32" selection-end-line="67" selection-end-column="32" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/configs/CommonConfig.java">
+    <entry file="file://$PROJECT_DIR$/src/configs/PeerInfoConfig.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="266">
-          <caret line="55" column="68" selection-start-line="55" selection-start-column="68" selection-end-line="55" selection-end-column="68" />
+        <state relative-caret-position="420">
+          <caret line="28" column="0" selection-start-line="28" selection-start-column="0" selection-end-line="28" selection-end-column="0" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#2802#2803#0" expanded="true" />
-            <element signature="e#2834#2835#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/peerProcess.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" column="0" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Peer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-          <folding />
+        <state relative-caret-position="330">
+          <caret line="22" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="22" selection-end-column="0" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
