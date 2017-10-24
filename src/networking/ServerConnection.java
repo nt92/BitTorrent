@@ -1,5 +1,8 @@
 package networking;
 
+import networking.messages.Message;
+import networking.messages.ServerMessageHandler;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.ServerSocket;
@@ -7,13 +10,18 @@ import java.net.Socket;
 
 public class ServerConnection {
     private ServerSocket serverSocket;
+    private ServerMessageHandler serverMessageHandler;
+
+    public ServerConnection(ServerMessageHandler serverMessageHandler){
+        this.serverMessageHandler = serverMessageHandler;
+    }
 
     public void start(int port) throws Exception{
 
         serverSocket = new ServerSocket(port);
 
         while (true) {
-            new HandlerThread(serverSocket.accept()).start();
+            new HandlerThread(serverSocket.accept(), serverMessageHandler).start();
         }
     }
 
@@ -22,12 +30,15 @@ public class ServerConnection {
     }
 
     private static class HandlerThread extends Thread {
+        private int clientPeerID;
         private Socket connection;
+        ServerMessageHandler serverMessageHandler;
         private DataInputStream in;
         private DataOutputStream out;
 
-        public HandlerThread(Socket connection) {
+        public HandlerThread(Socket connection, ServerMessageHandler serverMessageHandler) {
             this.connection = connection;
+            this.serverMessageHandler = serverMessageHandler;
         }
 
         public void run() {
@@ -54,6 +65,42 @@ public class ServerConnection {
                 byte[] request = new byte[length];
                 in.readFully(request);
                 System.out.println(request);
+            }
+        }
+
+        void outputMessage(Message message)
+        {
+            try{
+                //TODO - create function that converts a message to a byte array and sends
+                out.flush();
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        private Message getMessageFromHandler(Message message){
+            switch(message.getType()){
+                case HANDSHAKE:
+                    return serverMessageHandler.responseForClientBitfield(message, clientPeerID);
+                case BITFIELD:
+                    return serverMessageHandler.responseForClientBitfield(message, clientPeerID);
+                case CHOKE:
+                    return serverMessageHandler.responseForChoke(message, clientPeerID);
+                case UNCHOKE:
+                    return serverMessageHandler.responseForUnchoke(message, clientPeerID);
+                case INTERESTED:
+                    return serverMessageHandler.responseForInterested(message, clientPeerID);
+                case NOT_INTERESTED:
+                    return serverMessageHandler.responseForUninterested(message, clientPeerID);
+                case HAVE:
+                    return serverMessageHandler.responseForHave(message, clientPeerID);
+                case REQUEST:
+                    return serverMessageHandler.responseForRequest(message, clientPeerID);
+                case PIECE:
+                    return serverMessageHandler.responseForPiece(message, clientPeerID);
+                default:
+                    return null;
             }
         }
 
