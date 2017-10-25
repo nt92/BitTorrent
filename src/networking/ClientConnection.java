@@ -32,7 +32,7 @@ public class ClientConnection {
         //TODO - create handshake message and send with outputMessage(Message m)
 
         while (true) {
-            int length = in.readByte();
+            int length = in.readInt();
             byte[] response = new byte[length];
             in.readFully(response);
 
