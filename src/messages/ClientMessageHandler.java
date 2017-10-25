@@ -1,4 +1,4 @@
-package networking.messages;
+package messages;
 
 public interface ClientMessageHandler {
     Message responseForServerHandshake(Message message, int serverPeerID);

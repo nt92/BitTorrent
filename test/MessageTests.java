@@ -1,6 +1,6 @@
 import junit.framework.TestCase;
-import networking.messages.Message;
-import networking.messages.MessageType;
+import messages.Message;
+import messages.MessageType;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;

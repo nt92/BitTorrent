@@ -2,9 +2,9 @@ import configs.CommonConfig;
 import configs.PeerInfoConfig;
 import networking.ClientConnection;
 import networking.ServerConnection;
-import networking.messages.ClientMessageHandler;
-import networking.messages.Message;
-import networking.messages.ServerMessageHandler;
+import messages.ClientMessageHandler;
+import messages.Message;
+import messages.ServerMessageHandler;
 
 import java.util.*;
 

@@ -1,7 +1,7 @@
 package networking;
 
-import networking.messages.Message;
-import networking.messages.ServerMessageHandler;
+import messages.Message;
+import messages.ServerMessageHandler;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

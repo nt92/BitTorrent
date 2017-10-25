@@ -1,4 +1,4 @@
-package networking.messages;
+package messages;
 
 import java.util.HashMap;
 import java.util.Map;

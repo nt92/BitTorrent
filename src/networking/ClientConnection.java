@@ -1,8 +1,8 @@
 package networking;
 
 import configs.PeerInfoConfig;
-import networking.messages.ClientMessageHandler;
-import networking.messages.Message;
+import messages.ClientMessageHandler;
+import messages.Message;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
