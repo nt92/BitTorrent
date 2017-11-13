@@ -33,11 +33,10 @@ public class ClientConnection {
 
         while (true) {
             int length = in.readInt();
-            byte[] response = new byte[length];
-            in.readFully(response);
+            byte[] bytes = new byte[length];
+            in.readFully(bytes);
 
-            //TODO - create function that generates a message object given a byte array
-            Message messageResponse = null;
+            Message messageResponse = new Message(bytes);
             Message messageToSend = getMessageFromHandler(messageResponse);
 
             if(messageToSend != null){
@@ -49,7 +48,8 @@ public class ClientConnection {
     void outputMessage(Message message)
     {
         try{
-            //TODO - create function that converts a message to a byte array and sends
+            byte[] bytes = message.toBytes();
+            //TODO - send bytes
             out.flush();
         }
         catch(Exception e){
