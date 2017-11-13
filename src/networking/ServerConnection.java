@@ -89,23 +89,23 @@ public class ServerConnection {
         private Message getMessageFromHandler(Message message){
             switch(message.getType()){
                 case HANDSHAKE:
-                    return serverMessageHandler.responseForClientBitfield(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForHandshake(message, clientPeerID);
                 case BITFIELD:
-                    return serverMessageHandler.responseForClientBitfield(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForBitfield(message, clientPeerID);
                 case CHOKE:
-                    return serverMessageHandler.responseForChoke(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForChoke(message, clientPeerID);
                 case UNCHOKE:
-                    return serverMessageHandler.responseForUnchoke(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForUnchoke(message, clientPeerID);
                 case INTERESTED:
-                    return serverMessageHandler.responseForInterested(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForInterested(message, clientPeerID);
                 case NOT_INTERESTED:
-                    return serverMessageHandler.responseForUninterested(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForUninterested(message, clientPeerID);
                 case HAVE:
-                    return serverMessageHandler.responseForHave(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForHave(message, clientPeerID);
                 case REQUEST:
-                    return serverMessageHandler.responseForRequest(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForRequest(message, clientPeerID);
                 case PIECE:
-                    return serverMessageHandler.responseForPiece(message, clientPeerID);
+                    return serverMessageHandler.serverResponseForPiece(message, clientPeerID);
                 default:
                     return null;
             }

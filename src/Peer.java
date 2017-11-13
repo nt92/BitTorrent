@@ -82,58 +82,97 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         }).start();
     }
 
+    // ClientMessageHandler
+
     @Override
-    public Message responseForServerHandshake(Message message, int serverPeerID) {
+    public Message clientResponseForHandshake(Message message, int serverPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForChoke(Message message, int serverPeerID) {
+    public Message clientResponseForChoke(Message message, int serverPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForUnchoke(Message message, int serverPeerID) {
+    public Message clientResponseForUnchoke(Message message, int serverPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForInterested(Message message, int serverPeerID) {
+    public Message clientResponseForInterested(Message message, int serverPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForUninterested(Message message, int serverPeerID) {
+    public Message clientResponseForUninterested(Message message, int serverPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForHave(Message message, int serverPeerID) {
+    public Message clientResponseForHave(Message message, int serverPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForClientBitfield(Message message, int clientPeerID) {
+    public Message clientResponseForBitfield(Message message, int serverPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForServerBitfield(Message message, int serverPeerID) {
+    public Message clientResponseForRequest(Message message, int serverPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForRequest(Message message, int serverPeerID) {
+    public Message clientResponseForPiece(Message message, int serverPeerID) {
+        return null;
+    }
+
+    // ServerMessageHandler
+
+    @Override
+    public Message serverResponseForHandshake(Message message, int clientPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForPiece(Message message, int serverPeerID) {
+    public Message serverResponseForChoke(Message message, int clientPeerID) {
         return null;
     }
 
     @Override
-    public Message responseForClientHandshake(Message message, int clientPeerID) {
+    public Message serverResponseForUnchoke(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForInterested(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForUninterested(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForHave(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForBitfield(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForRequest(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForPiece(Message message, int clientPeerID) {
         return null;
     }
 }

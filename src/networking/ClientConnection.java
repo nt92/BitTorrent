@@ -60,23 +60,23 @@ public class ClientConnection {
     private Message getMessageFromHandler(Message message){
         switch(message.getType()){
             case HANDSHAKE:
-                return clientMessageHandler.responseForServerHandshake(message, serverPeerID);
+                return clientMessageHandler.clientResponseForHandshake(message, serverPeerID);
             case BITFIELD:
-                return clientMessageHandler.responseForServerBitfield(message, serverPeerID);
+                return clientMessageHandler.clientResponseForBitfield(message, serverPeerID);
             case CHOKE:
-                return clientMessageHandler.responseForChoke(message, serverPeerID);
+                return clientMessageHandler.clientResponseForChoke(message, serverPeerID);
             case UNCHOKE:
-                return clientMessageHandler.responseForUnchoke(message, serverPeerID);
+                return clientMessageHandler.clientResponseForUnchoke(message, serverPeerID);
             case INTERESTED:
-                return clientMessageHandler.responseForInterested(message, serverPeerID);
+                return clientMessageHandler.clientResponseForInterested(message, serverPeerID);
             case NOT_INTERESTED:
-                return clientMessageHandler.responseForUninterested(message, serverPeerID);
+                return clientMessageHandler.clientResponseForUninterested(message, serverPeerID);
             case HAVE:
-                return clientMessageHandler.responseForHave(message, serverPeerID);
+                return clientMessageHandler.clientResponseForHave(message, serverPeerID);
             case REQUEST:
-                return clientMessageHandler.responseForRequest(message, serverPeerID);
+                return clientMessageHandler.clientResponseForRequest(message, serverPeerID);
             case PIECE:
-                return clientMessageHandler.responseForPiece(message, serverPeerID);
+                return clientMessageHandler.clientResponseForPiece(message, serverPeerID);
             default:
                 return null;
         }
