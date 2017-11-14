@@ -67,14 +67,8 @@ public class ClientConnection {
                 return clientMessageHandler.clientResponseForChoke(message, serverPeerID);
             case UNCHOKE:
                 return clientMessageHandler.clientResponseForUnchoke(message, serverPeerID);
-            case INTERESTED:
-                return clientMessageHandler.clientResponseForInterested(message, serverPeerID);
-            case NOT_INTERESTED:
-                return clientMessageHandler.clientResponseForUninterested(message, serverPeerID);
             case HAVE:
                 return clientMessageHandler.clientResponseForHave(message, serverPeerID);
-            case REQUEST:
-                return clientMessageHandler.clientResponseForRequest(message, serverPeerID);
             case PIECE:
                 return clientMessageHandler.clientResponseForPiece(message, serverPeerID);
             default:

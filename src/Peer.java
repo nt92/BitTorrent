@@ -82,7 +82,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         }).start();
     }
 
-    // ClientMessageHandler
+    // ClientMessageHandler Methods
 
     @Override
     public Message clientResponseForHandshake(Message message, int serverPeerID) {
@@ -100,16 +100,6 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message clientResponseForInterested(Message message, int serverPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message clientResponseForUninterested(Message message, int serverPeerID) {
-        return null;
-    }
-
-    @Override
     public Message clientResponseForHave(Message message, int serverPeerID) {
         return null;
     }
@@ -120,29 +110,13 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message clientResponseForRequest(Message message, int serverPeerID) {
-        return null;
-    }
-
-    @Override
     public Message clientResponseForPiece(Message message, int serverPeerID) {
         return null;
     }
 
-    // ServerMessageHandler
-
+    // ServerMessageHandler Methods
     @Override
     public Message serverResponseForHandshake(Message message, int clientPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message serverResponseForChoke(Message message, int clientPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message serverResponseForUnchoke(Message message, int clientPeerID) {
         return null;
     }
 
@@ -157,22 +131,12 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message serverResponseForHave(Message message, int clientPeerID) {
-        return null;
-    }
-
-    @Override
     public Message serverResponseForBitfield(Message message, int clientPeerID) {
         return null;
     }
 
     @Override
     public Message serverResponseForRequest(Message message, int clientPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message serverResponseForPiece(Message message, int clientPeerID) {
         return null;
     }
 }

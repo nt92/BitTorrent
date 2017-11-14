@@ -92,20 +92,12 @@ public class ServerConnection {
                     return serverMessageHandler.serverResponseForHandshake(message, clientPeerID);
                 case BITFIELD:
                     return serverMessageHandler.serverResponseForBitfield(message, clientPeerID);
-                case CHOKE:
-                    return serverMessageHandler.serverResponseForChoke(message, clientPeerID);
-                case UNCHOKE:
-                    return serverMessageHandler.serverResponseForUnchoke(message, clientPeerID);
                 case INTERESTED:
                     return serverMessageHandler.serverResponseForInterested(message, clientPeerID);
                 case NOT_INTERESTED:
                     return serverMessageHandler.serverResponseForUninterested(message, clientPeerID);
-                case HAVE:
-                    return serverMessageHandler.serverResponseForHave(message, clientPeerID);
                 case REQUEST:
                     return serverMessageHandler.serverResponseForRequest(message, clientPeerID);
-                case PIECE:
-                    return serverMessageHandler.serverResponseForPiece(message, clientPeerID);
                 default:
                     return null;
             }
