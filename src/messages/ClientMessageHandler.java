@@ -1,21 +1,13 @@
 package messages;
 
 public interface ClientMessageHandler {
-    Message responseForServerHandshake(Message message, int serverPeerID);
-
-    Message responseForChoke(Message message, int serverPeerID);
-
-    Message responseForUnchoke(Message message, int serverPeerID);
-
-    Message responseForInterested(Message message, int serverPeerID);
-
-    Message responseForUninterested(Message message, int serverPeerID);
-
-    Message responseForHave(Message message, int serverPeerID);
-
-    Message responseForServerBitfield(Message message, int serverPeerID);
-
-    Message responseForRequest(Message message, int serverPeerID);
-
-    Message responseForPiece(Message message, int serverPeerID);
+    Message clientResponseForHandshake(Message message, int serverPeerID);
+    Message clientResponseForChoke(Message message, int serverPeerID);
+    Message clientResponseForUnchoke(Message message, int serverPeerID);
+    Message clientResponseForInterested(Message message, int serverPeerID);
+    Message clientResponseForUninterested(Message message, int serverPeerID);
+    Message clientResponseForHave(Message message, int serverPeerID);
+    Message clientResponseForBitfield(Message message, int serverPeerID);
+    Message clientResponseForRequest(Message message, int serverPeerID);
+    Message clientResponseForPiece(Message message, int serverPeerID);
 }
