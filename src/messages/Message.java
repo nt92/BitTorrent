@@ -25,7 +25,7 @@ public class Message {
     }
 
     public MessageType getType() {
-        return this.getType();
+        return this.type;
     }
 
     public byte[] getPayload() {

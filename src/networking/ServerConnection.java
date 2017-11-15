@@ -7,6 +7,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServerConnection {
     private ServerSocket serverSocket;
@@ -30,11 +32,14 @@ public class ServerConnection {
     }
 
     private static class HandlerThread extends Thread {
-        private int clientPeerID;
         private Socket connection;
-        ServerMessageHandler serverMessageHandler;
         private DataInputStream in;
         private DataOutputStream out;
+
+        private int clientPeerID;
+        ServerMessageHandler serverMessageHandler;
+
+        private Map handshakeMap = new HashMap<>();
 
         public HandlerThread(Socket connection, ServerMessageHandler serverMessageHandler) {
             this.connection = connection;
@@ -88,8 +93,8 @@ public class ServerConnection {
 
         private Message getMessageFromHandler(Message message){
             switch(message.getType()){
-                case HANDSHAKE:
-                    return serverMessageHandler.serverResponseForHandshake(message, clientPeerID);
+                //case HANDSHAKE:
+                    //return serverMessageHandler.serverResponseForHandshake(message, clientPeerID);
                 case BITFIELD:
                     return serverMessageHandler.serverResponseForBitfield(message, clientPeerID);
                 case INTERESTED:

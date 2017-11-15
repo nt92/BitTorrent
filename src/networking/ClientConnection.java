@@ -59,8 +59,8 @@ public class ClientConnection {
 
     private Message getMessageFromHandler(Message message){
         switch(message.getType()){
-            case HANDSHAKE:
-                return clientMessageHandler.clientResponseForHandshake(message, serverPeerID);
+            //case HANDSHAKE:
+                //return clientMessageHandler.clientResponseForHandshake(message, serverPeerID);
             case BITFIELD:
                 return clientMessageHandler.clientResponseForBitfield(message, serverPeerID);
             case CHOKE:
