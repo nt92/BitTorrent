@@ -1,13 +1,13 @@
 package files;
 
 import configs.CommonConfig;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
-import java.io.FileWriter;
-import java.nio.file.Paths;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +25,7 @@ public class FileHandler {
 
     public FileHandler(int peerID, CommonConfig config){
         this.peerID = peerID;
-        this.peerDirectory = "project/peer_" + this.peerID + "/";
+        this.peerDirectory = "~/project/peer_" + this.peerID + "/";
         this.fileName = config.getFileName();
         this.fileSize = config.getFileSize();
         this.pieceSize = config.getPieceSize();

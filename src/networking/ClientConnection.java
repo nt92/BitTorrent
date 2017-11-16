@@ -2,6 +2,7 @@ package networking;
 
 import configs.PeerInfoConfig;
 import messages.ClientMessageHandler;
+import messages.HandshakeMessage;
 import messages.Message;
 
 import java.io.DataInputStream;
@@ -12,11 +13,12 @@ public class ClientConnection {
     private int peerID;
     private int serverPeerID;
     private ClientMessageHandler clientMessageHandler;
-    Socket socket;
-    DataOutputStream out;
-    DataInputStream in;
 
-    public ClientConnection(int peerID, ClientMessageHandler clientMessageHandler){
+    private Socket socket;
+    private DataOutputStream out;
+    private DataInputStream in;
+
+    public ClientConnection(int peerID, ClientMessageHandler clientMessageHandler) {
         this.peerID = peerID;
         this.clientMessageHandler = clientMessageHandler;
     }
@@ -29,50 +31,47 @@ public class ClientConnection {
         out.flush();
         in = new DataInputStream(socket.getInputStream());
 
-        //TODO - create handshake message and send with outputMessage(Message m)
+        //FIXME: Is this the *other* peerID? Aka the peerID that we started a connection with? Or is that serverPeerID?
+        HandshakeMessage handshakeMessage = new HandshakeMessage(peerID);
+        outputBytes(handshakeMessage.toBytes());
 
         while (true) {
             int length = in.readInt();
             byte[] bytes = new byte[length];
             in.readFully(bytes);
 
-            Message messageResponse = new Message(bytes);
-            Message messageToSend = getMessageFromHandler(messageResponse);
-
-            if(messageToSend != null){
-                outputMessage(messageToSend);
+            byte[] bytesToSend = getResponseBytesFromHandler(bytes);
+            if(bytesToSend != null){
+                outputBytes(bytesToSend);
             }
         }
     }
 
-    void outputMessage(Message message)
-    {
-        try{
-            byte[] bytes = message.toBytes();
-            //TODO - send bytes
-            out.flush();
-        }
-        catch(Exception e){
-            e.printStackTrace();
-        }
+    void outputBytes(byte[] bytes) throws Exception {
+        //TODO: send bytes
+        out.flush();
     }
 
-    private Message getMessageFromHandler(Message message){
-        switch(message.getType()){
-            case HANDSHAKE:
-                return clientMessageHandler.clientResponseForHandshake(message, serverPeerID);
-            case BITFIELD:
-                return clientMessageHandler.clientResponseForBitfield(message, serverPeerID);
-            case CHOKE:
-                return clientMessageHandler.clientResponseForChoke(message, serverPeerID);
-            case UNCHOKE:
-                return clientMessageHandler.clientResponseForUnchoke(message, serverPeerID);
-            case HAVE:
-                return clientMessageHandler.clientResponseForHave(message, serverPeerID);
-            case PIECE:
-                return clientMessageHandler.clientResponseForPiece(message, serverPeerID);
-            default:
-                return null;
+    private byte[] getResponseBytesFromHandler(byte[] bytes) {
+        try {
+            HandshakeMessage handshakeMessage = new HandshakeMessage(bytes);
+            return clientMessageHandler.clientResponseForHandshake(handshakeMessage, serverPeerID).toBytes();
+        } catch (Exception e) {
+            Message message = new Message(bytes);
+            switch (message.getType()) {
+                case BITFIELD:
+                    return clientMessageHandler.clientResponseForBitfield(message, serverPeerID).toBytes();
+                case CHOKE:
+                    return clientMessageHandler.clientResponseForChoke(message, serverPeerID).toBytes();
+                case UNCHOKE:
+                    return clientMessageHandler.clientResponseForUnchoke(message, serverPeerID).toBytes();
+                case HAVE:
+                    return clientMessageHandler.clientResponseForHave(message, serverPeerID).toBytes();
+                case PIECE:
+                    return clientMessageHandler.clientResponseForPiece(message, serverPeerID).toBytes();
+                default:
+                    return null;
+            }
         }
     }
 
