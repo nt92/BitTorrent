@@ -1,5 +1,6 @@
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
+import messages.HandshakeMessage;
 import networking.ClientConnection;
 import networking.ServerConnection;
 import messages.ClientMessageHandler;
@@ -85,7 +86,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     // ClientMessageHandler Methods
 
     @Override
-    public Message clientResponseForHandshake(Message message, int serverPeerID) {
+    public Message clientResponseForHandshake(HandshakeMessage message, int serverPeerID) {
         return null;
     }
 
@@ -116,7 +117,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     // ServerMessageHandler Methods
     @Override
-    public Message serverResponseForHandshake(Message message, int clientPeerID) {
+    public Message serverResponseForHandshake(HandshakeMessage message, int clientPeerID) {
         return null;
     }
 
@@ -140,4 +141,3 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         return null;
     }
 }
-
