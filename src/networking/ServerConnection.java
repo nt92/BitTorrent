@@ -2,7 +2,6 @@ package networking;
 
 import messages.HandshakeMessage;
 import messages.Message;
-import messages.MessageType;
 import messages.ServerMessageHandler;
 
 import java.io.DataInputStream;
@@ -11,11 +10,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 
 public class ServerConnection {
@@ -53,7 +49,7 @@ public class ServerConnection {
         private int clientPeerID;
         ServerMessageHandler serverMessageHandler;
 
-        private Thread listener;
+        private Thread listenerThread;
 
         public RequestHandlerThread(Socket connection, ServerMessageHandler serverMessageHandler) {
             this.connection = connection;
@@ -90,8 +86,8 @@ public class ServerConnection {
             while (true) {
                 // First we will listen for the incoming messages and if the thread does not exist or is dead
                 // we will create a new thread and do so
-                if (listener == null || !listener.isAlive()){
-                    listener = new Thread(() -> {
+                if (listenerThread == null || !listenerThread.isAlive()){
+                    listenerThread = new Thread(() -> {
                         try{
                             int length = in.readInt();
                             byte[] requestMessage = new byte[length];
@@ -102,7 +98,7 @@ public class ServerConnection {
                     e.printStackTrace();
                         }
                     });
-                    listener.start();
+                    listenerThread.start();
                 }
 
                 // Next we will need to actually receive incoming messages based on the handler utilizing consumer
@@ -175,11 +171,6 @@ public class ServerConnection {
             in.close();
             out.close();
             connection.close();
-        }
-
-        void outputBytes(byte[] bytes) throws Exception {
-            //TODO: send bytes
-            out.flush();
         }
 
         private byte[] getResponseBytesFromHandler(byte[] bytes) {

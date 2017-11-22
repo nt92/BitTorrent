@@ -97,7 +97,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     // ServerMessageHandler Methods
     @Override
-    public Message serverResponseForHandshake(HandshakeMessage message, int clientPeerID) {
+    public Message serverResponseForHandshake(Message message, int clientPeerID) {
         return null;
     }
 
@@ -124,7 +124,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     // ClientMessageHandler Methods
 
     @Override
-    public Message clientResponseForHandshake(HandshakeMessage message, int serverPeerID) {
+    public Message clientResponseForHandshake(Message message, int serverPeerID) {
         return null;
     }
 
