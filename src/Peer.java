@@ -15,6 +15,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     private int numPieces;
     private Set<Integer> connections;
     private CommonConfig commonConfig;
+    // TODO: Add actual file data as a wrapper class
 
     public Peer(int peerID, CommonConfig commonConfig){
         this.peerID = peerID;
@@ -22,6 +23,8 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
         int fileSize = commonConfig.getFileSize();
         int pieceSize = commonConfig.getPieceSize();
+
+        // Sets number of pieces to be either fileSize / pieceSize if division evenly, otherwise add one
         this.numPieces = fileSize / pieceSize + (fileSize % pieceSize != 0 ? 1 : 0);
         this.bitField = new BitSet(numPieces);
 
@@ -29,19 +32,25 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     public void start(List<PeerInfoConfig> peerList) throws Exception{
+        // Gets the index of the current peer
         int peerIndex = 0;
         while (peerIndex < peerList.size() && peerList.get(peerIndex).getPeerID() != peerID){
             peerIndex++;
         }
 
-        if (peerIndex == peerList.size()){
-            throw new Exception("PeerID: " + peerID + " not found in peerList.");
+        PeerInfoConfig currentPeerInfo = peerList.get(peerIndex);
+
+        // If the current peer has the file, we can set its bitfield
+        if(currentPeerInfo.getHasFile()){
+            bitField.set(0, numPieces);
+
+            // TODO: Load file from file path into memory for the peer
         }
 
-        PeerInfoConfig myInfo = peerList.get(peerIndex);
+        // Start the server connection for the peer to begin receiving messages
+        startServerConnection(currentPeerInfo.getListeningPort());
 
-        startServerConnection(myInfo.getListeningPort());
-
+        // Start TCP connections with the peers in the list before the given one to start transferring messages/data
         for (int i = 0; i < peerIndex; i++){
             startClientConnection(peerList.get(i));
         }
