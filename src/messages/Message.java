@@ -11,6 +11,11 @@ import java.io.ByteArrayOutputStream;
 public class Message {
     private MessageType type;
     private byte[] payload;
+    private int peerId;
+
+    public Message(int peerId){
+        this.peerId = peerId;
+    }
 
     public Message(MessageType type, byte[] payload) {
         this.type = type;

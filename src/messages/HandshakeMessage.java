@@ -7,15 +7,16 @@ import java.util.Arrays;
 /**
  * Created by gonzalonunez on 11/15/17.
  */
-public class HandshakeMessage {
+public class HandshakeMessage extends Message{
     private static String HEADER_FIELD = "P2PFILESHARINGPROJ";
     int peerID;
 
     public HandshakeMessage(int peerID) {
-        this.peerID = peerID;
+        super(peerID);
     }
 
     public HandshakeMessage(byte[] bytes) throws Exception {
+        super(bytes);
         if (bytes.length != 32) {
             throw new Exception("Incorrect message length: the bytes do not correspond to a handshake message.");
         }

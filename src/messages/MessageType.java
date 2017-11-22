@@ -8,6 +8,7 @@ import java.util.Map;
  */
 
 public enum MessageType {
+    HANDSHAKE(-1),
     CHOKE(0),
     UNCHOKE(1),
     INTERESTED(2),

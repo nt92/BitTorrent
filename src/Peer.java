@@ -13,7 +13,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     private int peerID;
     private BitSet bitField;
     private int numPieces;
-    private Set<Integer> connections;
+    private Map<Integer, ClientConnection> connections;
     private CommonConfig commonConfig;
     // TODO: Add actual file data as a wrapper class
 
@@ -28,7 +28,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         this.numPieces = fileSize / pieceSize + (fileSize % pieceSize != 0 ? 1 : 0);
         this.bitField = new BitSet(numPieces);
 
-        this.connections = new HashSet<>();
+        this.connections = new HashMap<>();
     }
 
     public void start(List<PeerInfoConfig> peerList) throws Exception{
@@ -50,17 +50,19 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         // Start the server connection for the peer to begin receiving messages
         startServerConnection(currentPeerInfo.getListeningPort());
 
-        // Start TCP connections with the peers in the list before the given one to start transferring messages/data
+        // Start TCP connections with the peers in the list before the given one to startServer transferring messages/data
         for (int i = 0; i < peerIndex; i++){
             startClientConnection(peerList.get(i));
         }
+
+        // TODO: Create timers for optimistically choking/unchoking peers
     }
 
     private void startServerConnection(int port){
         ServerConnection serverConnection = new ServerConnection(this);
         new Thread(() -> {
             try {
-                serverConnection.start(port);
+                serverConnection.startServer(port);
             } catch (Exception e1) {
                 e1.printStackTrace();
             } finally{
@@ -76,7 +78,8 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     private void startClientConnection(PeerInfoConfig serverInfo){
         ClientConnection clientConnection = new ClientConnection(peerID, this);
 
-        connections.add(serverInfo.getPeerID());
+        // Add the connection to the other peer to the current peer's list of connections
+        connections.put(serverInfo.getPeerID(), clientConnection);
         new Thread(() -> {
             try {
                 clientConnection.startConnection(serverInfo);
@@ -90,6 +93,32 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
                 }
             }
         }).start();
+    }
+
+    // ServerMessageHandler Methods
+    @Override
+    public Message serverResponseForHandshake(HandshakeMessage message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForInterested(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForUninterested(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForBitfield(Message message, int clientPeerID) {
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForRequest(Message message, int clientPeerID) {
+        return null;
     }
 
     // ClientMessageHandler Methods
@@ -121,32 +150,6 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message clientResponseForPiece(Message message, int serverPeerID) {
-        return null;
-    }
-
-    // ServerMessageHandler Methods
-    @Override
-    public Message serverResponseForHandshake(HandshakeMessage message, int clientPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message serverResponseForInterested(Message message, int clientPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message serverResponseForUninterested(Message message, int clientPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message serverResponseForBitfield(Message message, int clientPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message serverResponseForRequest(Message message, int clientPeerID) {
         return null;
     }
 }
