@@ -1,5 +1,11 @@
 package messages;
 
-public class ActualMessage {
-    // TODO: Build out functionality for this class so it functions as a wrapper for all messages that are not handshakes
+import java.util.Arrays;
+import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
+
+public class ActualMessage extends Message{
+    public ActualMessage(byte[] data, MessageType type) throws Exception {
+        super(data, type);
+    }
 }

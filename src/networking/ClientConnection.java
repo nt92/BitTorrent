@@ -85,8 +85,8 @@ public class ClientConnection {
                 Message outMessage = outMessageQueue.poll();
                 try{
                     // Output the length of the message followed by the actual bytes of it
-                    out.writeInt(outMessage.toBytes().length);
-                    out.write(outMessage.toBytes());
+                    out.writeInt(outMessage.toByteArray().length);
+                    out.write(outMessage.toByteArray());
                     out.flush();
                 }
                 catch(IOException ioException){
@@ -137,29 +137,6 @@ public class ClientConnection {
     public void sendHandshakeMessage(){
         // TODO: Create a handshake message
         // TODO: Add handshake message to the out queue
-    }
-
-    private byte[] getResponseBytesFromHandler(byte[] bytes) {
-        try {
-            HandshakeMessage handshakeMessage = new HandshakeMessage(bytes);
-            return clientMessageHandler.clientResponseForHandshake(handshakeMessage, serverPeerID).toBytes();
-        } catch (Exception e) {
-            Message message = new Message(bytes);
-            switch (message.getType()) {
-                case BITFIELD:
-                    return clientMessageHandler.clientResponseForBitfield(message, serverPeerID).toBytes();
-                case CHOKE:
-                    return clientMessageHandler.clientResponseForChoke(message, serverPeerID).toBytes();
-                case UNCHOKE:
-                    return clientMessageHandler.clientResponseForUnchoke(message, serverPeerID).toBytes();
-                case HAVE:
-                    return clientMessageHandler.clientResponseForHave(message, serverPeerID).toBytes();
-                case PIECE:
-                    return clientMessageHandler.clientResponseForPiece(message, serverPeerID).toBytes();
-                default:
-                    return null;
-            }
-        }
     }
 
     public void closeConnection() throws Exception {

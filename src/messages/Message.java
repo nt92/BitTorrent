@@ -1,50 +1,59 @@
 package messages;
 
-import java.util.Arrays;
-import java.nio.ByteBuffer;
-import java.io.ByteArrayOutputStream;
+import util.Constants;
+import util.Utility;
 
-/**
- * Created by gonzalonunez on 10/24/17.
- */
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class Message {
-    private MessageType type;
+    private MessageType messageType;
+
+    // For Handshake header is the constant, type is 1 bits, and payload is the peerID
+    // For Actual header is the length, type is the type, and payload is the payload
+    private byte[] header;
+    private byte[] type;
     private byte[] payload;
-    private int peerId;
 
-    public Message(int peerId){
-        this.peerId = peerId;
+    public Message(byte[] data, MessageType messageType) throws Exception {
+        this.messageType = messageType;
+
+        if(messageType == MessageType.HANDSHAKE){
+            if (data.length != 32) {
+                throw new Exception("Incorrect message length: the bytes do not correspond to a handshake message.");
+            }
+            byte[] headerBytes = Arrays.copyOfRange(data, 0, 18);
+            this.header = headerBytes;
+
+            String headerField = new String(headerBytes, "ASCII");
+            if (!headerField.equals(Constants.HANDSHAKE_HEADER)) {
+                throw new Exception("Incorrect header field: the bytes do not correspond to a handshake message.");
+            }
+
+            byte[] zeroBits = new byte[Constants.NUM_ZERO_BYTE];
+            this.type = zeroBits;
+
+            byte[] peerIDBytes = Arrays.copyOfRange(data,28, 32);
+            this.payload = peerIDBytes;
+        } else {
+            byte[] messageLength = Arrays.copyOfRange(data, 0, 4);
+            this.header = messageLength;
+
+            // Determine the message type
+            byte[] messageTypeBytes = Arrays.copyOfRange(data, 4, 5);
+            this.type = messageTypeBytes;
+
+            // Determine the message Payload
+            int messageLengthInt = ByteBuffer.wrap(messageLength).getInt();
+            byte[] payloadBytes = Arrays.copyOfRange(data, 5, messageLengthInt);
+            this.payload = payloadBytes;
+        }
     }
 
-    public Message(MessageType type, byte[] payload) {
-        this.type = type;
-        this.payload = payload;
+    public byte[] toByteArray(){
+        return Utility.concatAll(header, type, payload);
     }
 
-    public Message(byte[] bytes) {
-        byte[] typeField = Arrays.copyOfRange(bytes, 0, 1);
-        byte typeNum = ByteBuffer.wrap(typeField).get();
-        this.type = MessageType.valueOf((int)typeNum);
-        this.payload = Arrays.copyOfRange(bytes, 1, bytes.length);
-    }
-
-    public MessageType getType() {
-        return this.type;
-    }
-
-    public byte[] getPayload() {
-        return this.payload;
-    }
-
-    public byte[] toBytes() {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        stream.write(this.type.getValue());
-        stream.write(this.payload, 0, this.payload.length);
-        return stream.toByteArray();
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (o == this) return true;
         if (o instanceof Message) {
@@ -53,5 +62,13 @@ public class Message {
                     Arrays.equals(this.payload, other.payload);
         }
         return false;
+    }
+
+    public MessageType getType(){
+        return messageType;
+    }
+
+    public byte[] getPayload() {
+        return payload;
     }
 }

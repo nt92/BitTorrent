@@ -116,8 +116,8 @@ public class ServerConnection {
                     Message outMessage = outMessageQueue.poll();
                     try{
                         // Output the length of the message followed by the actual bytes of it
-                        out.writeInt(outMessage.toBytes().length);
-                        out.write(outMessage.toBytes());
+                        out.writeInt(outMessage.toByteArray().length);
+                        out.write(outMessage.toByteArray());
                         out.flush();
                     }
                     catch(IOException ioException){
@@ -177,27 +177,6 @@ public class ServerConnection {
             in.close();
             out.close();
             connection.close();
-        }
-
-        private byte[] getResponseBytesFromHandler(byte[] bytes) {
-            try {
-                HandshakeMessage handshakeMessage = new HandshakeMessage(bytes);
-                return serverMessageHandler.serverResponseForHandshake(handshakeMessage, clientPeerID).toBytes();
-            } catch (Exception e) {
-                Message message = new Message(bytes);
-                switch (message.getType()) {
-                    case BITFIELD:
-                        return serverMessageHandler.serverResponseForBitfield(message, clientPeerID).toBytes();
-                    case INTERESTED:
-                        return serverMessageHandler.serverResponseForInterested(message, clientPeerID).toBytes();
-                    case NOT_INTERESTED:
-                        return serverMessageHandler.serverResponseForUninterested(message, clientPeerID).toBytes();
-                    case REQUEST:
-                        return serverMessageHandler.serverResponseForRequest(message, clientPeerID).toBytes();
-                    default:
-                        return null;
-                }
-            }
         }
     }
 }
