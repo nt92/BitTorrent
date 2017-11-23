@@ -5,6 +5,7 @@ import messages.*;
 import networking.ClientConnection;
 import networking.ServerConnection;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 
 public class Peer implements ClientMessageHandler, ServerMessageHandler{
@@ -117,8 +118,8 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
             startClientConnection(peerInfoConfigMap.get(clientPeerID));
         }
 
-        // TODO: Return handshake message using the current peerID as the header
-        return null;
+        // Creates a message using MessageType using peerID as the payload
+        return MessageType.HANDSHAKE.createMessageWithPayload(ByteBuffer.allocate(4).putInt(peerID).array());
     }
 
     @Override
