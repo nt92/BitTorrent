@@ -1,24 +1,29 @@
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
-import messages.HandshakeMessage;
+import files.Logger;
+import messages.*;
 import networking.ClientConnection;
 import networking.ServerConnection;
-import messages.ClientMessageHandler;
-import messages.Message;
-import messages.ServerMessageHandler;
 
 import java.util.*;
 
 public class Peer implements ClientMessageHandler, ServerMessageHandler{
+    private Logger logger;
     private int peerID;
     private BitSet bitField;
     private int numPieces;
+
+    private Map<Integer, PeerInfoConfig> peerInfoConfigMap;
     private Map<Integer, ClientConnection> connections;
+    private Map<Integer, BitSet> serverBitfields;
+
     private CommonConfig commonConfig;
+
     // TODO: Add actual file data as a wrapper class
 
-    public Peer(int peerID, CommonConfig commonConfig){
+    public Peer(int peerID, CommonConfig commonConfig) throws Exception {
         this.peerID = peerID;
+        logger = new Logger(peerID);
         this.commonConfig = commonConfig;
 
         int fileSize = commonConfig.getFileSize();
@@ -28,7 +33,9 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         this.numPieces = fileSize / pieceSize + (fileSize % pieceSize != 0 ? 1 : 0);
         this.bitField = new BitSet(numPieces);
 
+        this.peerInfoConfigMap = new HashMap<>();
         this.connections = new HashMap<>();
+        this.serverBitfields = new HashMap<>();
     }
 
     public void start(List<PeerInfoConfig> peerList) throws Exception{
@@ -50,19 +57,24 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         // Start the server connection for the peer to begin receiving messages
         startServerConnection(currentPeerInfo.getListeningPort());
 
-        // Start TCP connections with the peers in the list before the given one to startServer transferring messages/data
+        // Start TCP connections with the peers in the list before the given one to start server transferring messages/data
         for (int i = 0; i < peerIndex; i++){
             startClientConnection(peerList.get(i));
+        }
+
+        // Map that holds all the peerIDs mapped to their corresponding configs
+        for (PeerInfoConfig peerInfoConfig : peerList){
+            this.peerInfoConfigMap.put(peerInfoConfig.getPeerID(), peerInfoConfig);
         }
 
         // TODO: Create timers for optimistically choking/unchoking peers
     }
 
-    private void startServerConnection(int port){
+    private void startServerConnection(int serverPort){
         ServerConnection serverConnection = new ServerConnection(this);
         new Thread(() -> {
             try {
-                serverConnection.startServer(port);
+                serverConnection.startServer(serverPort);
             } catch (Exception e1) {
                 e1.printStackTrace();
             } finally{
@@ -75,14 +87,14 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         }).start();
     }
 
-    private void startClientConnection(PeerInfoConfig serverInfo){
+    private void startClientConnection(PeerInfoConfig peerInfo){
         ClientConnection clientConnection = new ClientConnection(peerID, this);
 
-        // Add the connection to the other peer to the current peer's list of connections
-        connections.put(serverInfo.getPeerID(), clientConnection);
+        // Add the connection to the other peer to the current peer's map of connections
+        connections.put(peerInfo.getPeerID(), clientConnection);
         new Thread(() -> {
             try {
-                clientConnection.startConnection(serverInfo);
+                clientConnection.startConnection(peerInfo);
             } catch (Exception e1) {
                 e1.printStackTrace();
             } finally {
@@ -96,8 +108,16 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     // ServerMessageHandler Methods
+
     @Override
-    public Message serverResponseForHandshake(Message message, int clientPeerID) {
+    public Message serverResponseForHandshake(Message message, int clientPeerID) throws Exception {
+        logger.logConnectionReceived(peerID, clientPeerID);
+
+        if (!connections.containsKey(clientPeerID)){
+            startClientConnection(peerInfoConfigMap.get(clientPeerID));
+        }
+
+        // TODO: Return handshake message using the current peerID as the header
         return null;
     }
 
@@ -124,7 +144,20 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     // ClientMessageHandler Methods
 
     @Override
-    public Message clientResponseForHandshake(Message message, int serverPeerID) {
+    public Message clientResponseForHandshake(Message message, int serverPeerID) throws Exception {
+        logger.logConnectionMade(peerID, serverPeerID);
+
+        // Sanity check to see if header and peerID are both correct
+        if (HandshakeMessage.class.isInstance(message)) {
+            if (HandshakeMessage.class.cast(message).getPeerID() != serverPeerID) {
+                return null;
+            }
+        }
+
+        // Add an empty bitfield for the given serverPeerID to the current peer
+        serverBitfields.put(serverPeerID, new BitSet(numPieces));
+
+        // TODO: Create function that returns a BITFIELD based on the current bitField in the peer
         return null;
     }
 

@@ -1,14 +1,13 @@
 package messages;
 
+import util.Constants;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-/**
- * Created by gonzalonunez on 11/15/17.
- */
 public class HandshakeMessage extends Message{
-    private static String HEADER_FIELD = "P2PFILESHARINGPROJ";
+    private static String HEADER_FIELD = Constants.HANDSHAKE_HEADER;
     int peerID;
 
     public HandshakeMessage(int peerID) {

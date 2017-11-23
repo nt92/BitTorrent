@@ -15,7 +15,7 @@ public class Logger {
     private File file;
     private FileOutputStream outputStream;
 
-    private Logger(int peerID) throws Exception {
+    public Logger(int peerID) throws Exception {
         this.peerID = peerID;
         this.file = new File("~/project/log_peer_" + this.peerID + ".log");
         if(!file.getParentFile().exists()){
