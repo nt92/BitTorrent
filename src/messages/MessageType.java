@@ -45,14 +45,25 @@ public enum MessageType {
             byte[] header = Constants.HANDSHAKE_HEADER.getBytes();
             byte[] zeroBytes = new byte[Constants.NUM_ZERO_BYTE];
 
-            // Concats headers, unmber of zeroBytes, and payload for handshake
+            // Concats headers, number of zeroBytes, and payload for handshake
             return new HandshakeMessage(Utility.concatAll(header, zeroBytes, payload));
 
         } else{
-            // TODO: Create a message for ActualMessage based on payload as well
-            return null;
+            byte[] header = ByteBuffer.allocate(4).putInt(payload.length).array();
+            byte[] type = new byte[Constants.MESSAGE_TYPE_SIZE];
+
+            // Gets the last bit in the byte representation of the int
+            type[0] = ByteBuffer.allocate(4).putInt(this.getValue()).array()[3];
+
+            return new ActualMessage(Utility.concatAll(header, type, payload), this);
         }
     }
 
-    // TODO: Create a function for creating a message through a byte array for processing a message in byte[] format
+    public Message createMessageWithBytes(byte[] data) throws Exception {
+        if (this == MessageType.HANDSHAKE){
+            return new HandshakeMessage(data);
+        } else{
+            return new ActualMessage(data, this);
+        }
+    }
 }

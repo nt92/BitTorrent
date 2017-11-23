@@ -158,8 +158,8 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         // Add an empty bitfield for the given serverPeerID to the current peer
         serverBitfields.put(serverPeerID, new BitSet(numPieces));
 
-        // TODO: Create function that returns a BITFIELD based on the current bitField in the peer
-        return null;
+        // Returns a message of type bitfield with the data of the bitfield in a byte array as payload
+        return MessageType.BITFIELD.createMessageWithPayload(bitField.toByteArray());
     }
 
     @Override
