@@ -102,7 +102,13 @@ public class ServerConnection {
                 }
 
                 // Next we will need to actually receive incoming messages based on the handler utilizing consumer
-                handleIncomingMessages(this::notifyHandler);
+                handleIncomingMessages((inMessage) -> {
+                    try {
+                        notifyHandler(inMessage);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
 
                 // Finally we need to be able to send outgoing mnessages
                 while(!outMessageQueue.isEmpty()){
@@ -136,7 +142,7 @@ public class ServerConnection {
             }
         }
 
-        private void notifyHandler(Message inMessage){
+        private void notifyHandler(Message inMessage) throws Exception {
 
             Message outMessage;
             switch(inMessage.getType()){
