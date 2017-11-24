@@ -16,7 +16,9 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     private Map<Integer, PeerInfoConfig> peerInfoConfigMap;
     private Map<Integer, ClientConnection> connections;
-    private Map<Integer, BitSet> serverBitfields;
+    private Map<Integer, BitSet> otherPeerBitfields;
+
+    private Set<Integer> interested;
 
     private CommonConfig commonConfig;
 
@@ -36,7 +38,9 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
         this.peerInfoConfigMap = new HashMap<>();
         this.connections = new HashMap<>();
-        this.serverBitfields = new HashMap<>();
+        this.otherPeerBitfields = new HashMap<>();
+
+        interested = new HashSet<>();
     }
 
     public void start(List<PeerInfoConfig> peerList) throws Exception{
@@ -123,17 +127,32 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message serverResponseForInterested(Message message, int clientPeerID) {
+    public Message serverResponseForBitfield(Message message, int clientPeerID) {
+        // TODO: Log bitfield message
+
+        // TODO: Send bitfield message if initially has file, or null if doesn't have anything
+        return null;
+    }
+
+    @Override
+    public Message serverResponseForInterested(Message message, int clientPeerID) throws Exception {
+        logger.logReceivedInterestedMessage(peerID, clientPeerID);
+
+        // Add the client peer from the list of interested, don't return anything because
+        // choking and unchoking are done via the timers
+        interested.add(clientPeerID);
+
         return null;
     }
 
     @Override
     public Message serverResponseForUninterested(Message message, int clientPeerID) {
-        return null;
-    }
+        // TODO: Log Uninterested message
 
-    @Override
-    public Message serverResponseForBitfield(Message message, int clientPeerID) {
+        // Remove the client peer from the list of interested, don't return anything because
+        // choking and unchoking are done via the timers
+        interested.remove(clientPeerID);
+
         return null;
     }
 
@@ -156,7 +175,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         }
 
         // Add an empty bitfield for the given serverPeerID to the current peer
-        serverBitfields.put(serverPeerID, new BitSet(numPieces));
+        otherPeerBitfields.put(serverPeerID, new BitSet(numPieces));
 
         // Returns a message of type bitfield with the data of the bitfield in a byte array as payload
         return MessageType.BITFIELD.createMessageWithPayload(bitField.toByteArray());
@@ -179,6 +198,13 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message clientResponseForBitfield(Message message, int serverPeerID) {
+        // TODO: Log bitfield
+
+        // TODO: Get payload from message and compare to current peer's bitset and determine what we need
+
+        // TODO: Update otherPeerBitfields with current serverPeerID
+
+        // TODO: If we have missing bits the other one has, send interested, otherwise not interested
         return null;
     }
 
