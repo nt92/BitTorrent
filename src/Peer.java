@@ -158,6 +158,8 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message serverResponseForRequest(Message message, int clientPeerID) {
+
+
         return null;
     }
 
@@ -213,7 +215,21 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message clientResponseForHave(Message message, int serverPeerID) {
+    public Message clientResponseForHave(Message message, int serverPeerID) throws Exception {
+        int pieceIndex = ByteBuffer.wrap(message.getPayload()).getInt();
+
+        logger.logReceivedHaveMessage(peerID, serverPeerID, pieceIndex);
+
+        // Set the current peer to know that the other peer has this given bit
+        BitSet peerBitSet = otherPeerBitfields.get(serverPeerID);
+        peerBitSet.set(pieceIndex);
+        otherPeerBitfields.put(serverPeerID, peerBitSet);
+
+        // Send an interested message if current peer does not have this bit
+        if(!bitField.get(pieceIndex))
+            // Interested messages have empty payload
+            return MessageType.INTERESTED.createMessageWithPayload(new byte[] {});
+
         return null;
     }
 
