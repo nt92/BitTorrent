@@ -61,8 +61,8 @@ public class ClientConnection {
                         int length = in.readInt();
                         byte[] requestMessage = new byte[length];
                         in.readFully(requestMessage);
-                        // TODO: Parse requestMessage and get the appropriate response
-                        // TODO: Add the new message to the inMessageQueue
+                        Message incomingMessage = MessageType.createMessageWithBytes(requestMessage);
+                        inMessageQueue.add(incomingMessage);
                     } catch (Exception e){
                         e.printStackTrace();
                     }
@@ -134,9 +134,11 @@ public class ClientConnection {
         }
     }
 
-    public void sendHandshakeMessage(){
-        // TODO: Create a handshake message
-        // TODO: Add handshake message to the out queue
+    public void sendHandshakeMessage() throws Exception {
+        // Creates new handshake message with peerID and adds to the outbound queue
+        byte[] handshakePeerID = ByteBuffer.allocate(4).putInt(peerID).array();
+        Message handshake = MessageType.HANDSHAKE.createMessageWithPayload(handshakePeerID);
+        outMessageQueue.add(handshake);
     }
 
     public void closeConnection() throws Exception {

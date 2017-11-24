@@ -182,21 +182,6 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message clientResponseForChoke(Message message, int serverPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message clientResponseForUnchoke(Message message, int serverPeerID) {
-        return null;
-    }
-
-    @Override
-    public Message clientResponseForHave(Message message, int serverPeerID) {
-        return null;
-    }
-
-    @Override
     public Message clientResponseForBitfield(Message message, int serverPeerID) {
         // TODO: Log bitfield
 
@@ -205,6 +190,30 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         // TODO: Update otherPeerBitfields with current serverPeerID
 
         // TODO: If we have missing bits the other one has, send interested, otherwise not interested
+        return null;
+    }
+
+    @Override
+    public Message clientResponseForChoke(Message message, int serverPeerID) throws Exception {
+        logger.logChoking(peerID, serverPeerID);
+
+        // Return null message and don't do anything else
+        return null;
+    }
+
+    @Override
+    public Message clientResponseForUnchoke(Message message, int serverPeerID) throws Exception {
+        logger.logUnchoking(peerID, serverPeerID);
+
+        // TODO: Determine missing piece that the server has
+
+        // TODO: Send request message to server for the piece
+
+        return null;
+    }
+
+    @Override
+    public Message clientResponseForHave(Message message, int serverPeerID) {
         return null;
     }
 

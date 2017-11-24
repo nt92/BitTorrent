@@ -19,41 +19,44 @@ public class Message {
         this.messageType = messageType;
 
         if(messageType == MessageType.HANDSHAKE){
+            // If not correct length for handshake, throw exception
             if (data.length != 32) {
                 throw new Exception("Incorrect message length: the bytes do not correspond to a handshake message.");
             }
             byte[] headerBytes = Arrays.copyOfRange(data, 0, 18);
             this.header = headerBytes;
 
+            // If header is not equal to constant value, throw exception
             String headerField = new String(headerBytes, "ASCII");
             if (!headerField.equals(Constants.HANDSHAKE_HEADER)) {
                 throw new Exception("Incorrect header field: the bytes do not correspond to a handshake message.");
             }
 
-            byte[] zeroBits = new byte[Constants.NUM_ZERO_BYTE];
-            this.type = zeroBits;
+            // Constant number of zero bits
+            this.type = new byte[Constants.NUM_ZERO_BYTE];
 
-            byte[] peerIDBytes = Arrays.copyOfRange(data,28, 32);
-            this.payload = peerIDBytes;
+            // Payload for handshake is the peerID
+            this.payload = Arrays.copyOfRange(data,28, 32);
         } else {
+            // From bytes 0 to 4, we have the length of the message
             byte[] messageLength = Arrays.copyOfRange(data, 0, 4);
             this.header = messageLength;
 
-            // Determine the message type
-            byte[] messageTypeBytes = Arrays.copyOfRange(data, 4, 5);
-            this.type = messageTypeBytes;
+            // Determine the message type using the fifth byte in the array
+            this.type = Arrays.copyOfRange(data, 4, 5);
 
-            // Determine the message Payload
+            // Determine the message Payload with the length given to use previously in 0 to 4
             int messageLengthInt = ByteBuffer.wrap(messageLength).getInt();
-            byte[] payloadBytes = Arrays.copyOfRange(data, 5, messageLengthInt);
-            this.payload = payloadBytes;
+            this.payload = Arrays.copyOfRange(data, 5, messageLengthInt);
         }
     }
 
+    // Uses the method in Utility to concatenate header, type, and payload byte arrays into one large byte array
     public byte[] toByteArray(){
         return Utility.concatAll(header, type, payload);
     }
 
+    // Method to check if two messages are equivalent
     public boolean equals(Object o) {
         if (o == this) return true;
         if (o instanceof Message) {

@@ -2,6 +2,7 @@ package networking;
 
 import messages.HandshakeMessage;
 import messages.Message;
+import messages.MessageType;
 import messages.ServerMessageHandler;
 
 import java.io.DataInputStream;
@@ -49,6 +50,7 @@ public class ServerConnection {
         private int clientPeerID;
         ServerMessageHandler serverMessageHandler;
 
+        // Thread to handle incoming requests
         private Thread listenerThread;
 
         public RequestHandlerThread(Socket connection, ServerMessageHandler serverMessageHandler) {
@@ -92,8 +94,8 @@ public class ServerConnection {
                             int length = in.readInt();
                             byte[] requestMessage = new byte[length];
                             in.readFully(requestMessage);
-                            // TODO: Parse requestMessage and get the appropriate response
-                            // TODO: Add the new message to the inMessageQueue
+                            Message incomingMessage = MessageType.createMessageWithBytes(requestMessage);
+                            inMessageQueue.add(incomingMessage);
                         } catch (Exception e){
                     e.printStackTrace();
                         }
