@@ -4,6 +4,7 @@ import files.Logger;
 import messages.*;
 import networking.ClientConnection;
 import networking.ServerConnection;
+import util.TimerMethods;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -72,7 +73,22 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
             this.peerInfoConfigMap.put(peerInfoConfig.getPeerID(), peerInfoConfig);
         }
 
-        // TODO: Create timers for optimistically choking/unchoking peers
+        // Timer methods that run on the unchoking and optimistically unchoking intervals utilizing TimerTask
+        Timer getPreferredPeersTimer = new Timer();
+        getPreferredPeersTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                TimerMethods.getPreferredPeers();
+            }
+        }, 0, 1000 * commonConfig.getUnchokingInterval());
+
+        Timer getOptimisticallyUnchokedPeerTimer = new Timer();
+        getOptimisticallyUnchokedPeerTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                TimerMethods.getOptimisticallyUnchokedPeer();
+            }
+        }, 0, 1000 * commonConfig.getOptimisticUnchokingInterval());
     }
 
     private void startServerConnection(int serverPort){
@@ -127,10 +143,13 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message serverResponseForBitfield(Message message, int clientPeerID) {
+    public Message serverResponseForBitfield(Message message, int clientPeerID) throws Exception {
         // TODO: Log bitfield message
 
-        // TODO: Send bitfield message if initially has file, or null if doesn't have anything
+        // If the bitfield is NOT empty, we send back the bitfield of the current peer
+        if(!bitField.isEmpty())
+            return MessageType.BITFIELD.createMessageWithPayload(bitField.toByteArray());
+
         return null;
     }
 
@@ -158,7 +177,11 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message serverResponseForRequest(Message message, int clientPeerID) {
+        // TODO: Log Request
 
+        // TODO: If the requesting peer is is a neighbor, send it a piece
+        // I think this will be done by getting the piece from the request, then getting the piece from the current
+        // peer, and then sending it over as a MessageType.PIECE. Don't think anything else would need to be done
 
         return null;
     }
@@ -234,7 +257,23 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message clientResponseForPiece(Message message, int serverPeerID) {
+    public Message clientResponseForPiece(Message message, int serverPeerID) throws Exception {
+        // TODO: If file/piece is already in the current peer don't do anything
+
+        // Get the piece index through payload of 0-4 being index and the rest being the actual piece
+        byte[] pieceIndexBytes = Arrays.copyOfRange(message.getPayload(), 0, 4);
+        int pieceIndex = ByteBuffer.wrap(pieceIndexBytes).getInt();
+        byte[] pieceBytes = Arrays.copyOfRange(message.getPayload(), 4, message.getPayload().length);
+
+        logger.logPieceDownloaded(peerID, serverPeerID, pieceIndex, numPieces);
+
+        // TODO: If peer does not currently have the piece, update the file and the bitset
+
+        // After this, we need to check and see if the file is finished. If so we write the file to actual memory
+        // with the file chunker. Then we send a NOT_INTERESTED message to all peers.
+        // If the file is not finished, get the next missing piece from the other peer's bitset and request a message
+        // Finally, update all the peers that the current peer has the given piece
+
         return null;
     }
 }

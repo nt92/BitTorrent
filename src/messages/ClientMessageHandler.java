@@ -6,5 +6,5 @@ public interface ClientMessageHandler {
     Message clientResponseForUnchoke(Message message, int serverPeerID) throws Exception;
     Message clientResponseForHave(Message message, int serverPeerID) throws Exception;
     Message clientResponseForBitfield(Message message, int serverPeerID);
-    Message clientResponseForPiece(Message message, int serverPeerID);
+    Message clientResponseForPiece(Message message, int serverPeerID) throws Exception;
 }
