@@ -1,10 +1,10 @@
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
 import files.Logger;
+import files.FileHandler;
 import messages.*;
 import networking.ClientConnection;
 import networking.ServerConnection;
-import util.TimerMethods;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -28,7 +28,8 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     private CommonConfig commonConfig;
 
-    // TODO: Add actual file data as a wrapper class
+    // Holds the data for the actual file
+    private FileHandler fileHandler;
 
     public Peer(int peerID, CommonConfig commonConfig) throws Exception {
         this.peerID = peerID;
@@ -46,6 +47,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         this.otherPeerBitfields = new HashMap<>();
 
         interested = new HashSet<>();
+        fileHandler = new FileHandler(peerID, commonConfig);
     }
 
     public void start(List<PeerInfoConfig> peerList) throws Exception{
@@ -78,19 +80,26 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         }
 
         // Timer methods that run on the unchoking and optimistically unchoking intervals utilizing TimerTask
+        getPreferredPeers();
+        getOptimisticallyUnchokedPeer();
+    }
+
+    private void getPreferredPeers(){
         Timer getPreferredPeersTimer = new Timer();
         getPreferredPeersTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                TimerMethods.getPreferredPeers();
+                // TODO: Implement logic for getting preferred peers once
             }
         }, 0, 1000 * commonConfig.getUnchokingInterval());
+    }
 
+    private void getOptimisticallyUnchokedPeer(){
         Timer getOptimisticallyUnchokedPeerTimer = new Timer();
         getOptimisticallyUnchokedPeerTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                TimerMethods.getOptimisticallyUnchokedPeer();
+                // TODO: Implement logic for optimistically unchoking a peer once
             }
         }, 0, 1000 * commonConfig.getOptimisticUnchokingInterval());
     }
@@ -182,14 +191,25 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message serverResponseForRequest(Message message, int clientPeerID) {
+    public Message serverResponseForRequest(Message message, int clientPeerID) throws Exception {
         // TODO: Log Request
 
         // TODO: If the requesting peer is is a neighbor, send it a piece
         // I think this will be done by getting the piece from the request, then getting the piece from the current
         // peer, and then sending it over as a MessageType.PIECE. Don't think anything else would need to be done
 
-        return null;
+        // Get the index from the payload of the message
+        int pieceIndex = ByteBuffer.wrap(message.getPayload()).getInt();
+
+        // Get the piece that's requested in the form of a byte array
+        byte[] requestedPieceByteArray = fileHandler.getPieceByteData(pieceIndex);
+
+        // Create a piece message to send
+        byte[] pieceNumberBytes = ByteBuffer.allocate(4).putInt(pieceIndex).array();
+        byte[] piecePayloadBytes = new byte[pieceNumberBytes.length + requestedPieceByteArray.length];
+        System.arraycopy(pieceNumberBytes, 0, piecePayloadBytes, 0, pieceNumberBytes.length);
+        System.arraycopy(requestedPieceByteArray, 0, piecePayloadBytes, pieceNumberBytes.length, requestedPieceByteArray.length);
+        return MessageType.PIECE.createMessageWithPayload(piecePayloadBytes);
     }
 
     // ClientMessageHandler Methods
@@ -213,15 +233,24 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     }
 
     @Override
-    public Message clientResponseForBitfield(Message message, int serverPeerID) {
+    public Message clientResponseForBitfield(Message message, int serverPeerID) throws Exception {
         // TODO: Log bitfield
 
-        // TODO: Get payload from message and compare to current peer's bitset and determine what we need
+        // Get the bitset from the payload of the message and then get the missing bits from the file
+        BitSet serverBitSet = BitSet.valueOf(message.getPayload());
+        List<Integer> missingBitIndices = fileHandler.getMissingPieces(bitField, serverBitSet);
 
-        // TODO: Update otherPeerBitfields with current serverPeerID
+        // Update our other server bitfields so we know it has that given set
+        otherPeerBitfields.put(serverPeerID, serverBitSet);
 
-        // TODO: If we have missing bits the other one has, send interested, otherwise not interested
-        return null;
+        // If we have missing bits in the current peer, send an interested message otherwise uninterested
+        // Both payloads are empty byte arrays as that's part of the protocol description
+        if (missingBitIndices.size() > 0) {
+            return MessageType.INTERESTED.createMessageWithPayload(new byte[] {});
+        }
+        else {
+            return MessageType.NOT_INTERESTED.createMessageWithPayload(new byte[] {});
+        }
     }
 
     @Override
@@ -236,9 +265,14 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     public Message clientResponseForUnchoke(Message message, int serverPeerID) throws Exception {
         Logger.logUnchoking(peerID, serverPeerID);
 
-        // TODO: Determine missing piece that the server has
+        // Get a random missing piece from the file given the two bitsets
+        int randMissingPieceIndex = fileHandler.getMissingPiece(bitField, otherPeerBitfields.get(serverPeerID));
 
-        // TODO: Send request message to server for the piece
+        // If we are missing anything, send a request message
+        if (randMissingPieceIndex >= 0) {
+            byte[] requestPayload = ByteBuffer.allocate(4).putInt(randMissingPieceIndex).array();
+            return MessageType.REQUEST.createMessageWithPayload(requestPayload);
+        }
 
         return null;
     }

@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -122,4 +123,24 @@ public class FileHandler {
         }
     }
 
+    // TODO: Create function that returns the byte data for a piece given the index
+    public byte[] getPieceByteData(int pieceIndex){
+        return null;
+    }
+
+    // TODO: Create function that adds a piece to the file's data given pieceData and the index
+    public void addPiece(int pieceIndex, byte[] pieceData){
+
+    }
+
+    // TODO: Create function that randomly selects a random pieceIndex from the set of missing given two bitsets
+    public int getMissingPiece(BitSet myBitSet, BitSet otherBitSet){
+        return -1;
+    }
+
+
+    // TODO: Create function that returns all of the missing pieceIndices from two bitsets
+    public List<Integer> getMissingPieces(BitSet myBitSet, BitSet otherBitSet){
+        return null;
+    }
 }
