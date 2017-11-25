@@ -18,6 +18,8 @@ import java.util.function.Consumer;
 public class ServerConnection {
     private ServerSocket serverSocket;
     private ServerMessageHandler serverMessageHandler;
+
+    // For sending every peer a message if need be
     private List<RequestHandlerThread> requestHandlerThreads;
 
     public ServerConnection(ServerMessageHandler serverMessageHandler){
@@ -38,7 +40,9 @@ public class ServerConnection {
         serverSocket.close();
     }
 
+    // A new thread is created for each request sent to the server
     private static class RequestHandlerThread extends Thread {
+        // Socket for connection and input and output streams for i/o
         private Socket connection;
         private DataInputStream in;
         private DataOutputStream out;

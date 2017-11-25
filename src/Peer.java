@@ -10,15 +10,20 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 public class Peer implements ClientMessageHandler, ServerMessageHandler{
-    private Logger logger;
     private int peerID;
     private BitSet bitField;
     private int numPieces;
 
+    // Maps the PeerID to the corresponding PeerInfoConfig
     private Map<Integer, PeerInfoConfig> peerInfoConfigMap;
+
+    // Maps the PeerID to the ClientConnection TCP socket
     private Map<Integer, ClientConnection> connections;
+
+    // Holds the BitSets of other peers for access within the request/have calls
     private Map<Integer, BitSet> otherPeerBitfields;
 
+    // Set of interested peers for the peer to send messages to
     private Set<Integer> interested;
 
     private CommonConfig commonConfig;
@@ -27,7 +32,6 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     public Peer(int peerID, CommonConfig commonConfig) throws Exception {
         this.peerID = peerID;
-        logger = new Logger(peerID);
         this.commonConfig = commonConfig;
 
         int fileSize = commonConfig.getFileSize();
@@ -91,6 +95,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         }, 0, 1000 * commonConfig.getOptimisticUnchokingInterval());
     }
 
+    // Creates a server connection on the given peer that spawns threads for each request
     private void startServerConnection(int serverPort){
         ServerConnection serverConnection = new ServerConnection(this);
         new Thread(() -> {
@@ -108,6 +113,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         }).start();
     }
 
+    // Creates a client connection between this peer and another peer for data transfer
     private void startClientConnection(PeerInfoConfig peerInfo){
         ClientConnection clientConnection = new ClientConnection(peerID, this);
 
@@ -132,7 +138,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message serverResponseForHandshake(Message message, int clientPeerID) throws Exception {
-        logger.logConnectionReceived(peerID, clientPeerID);
+        Logger.logConnectionReceived(peerID, clientPeerID);
 
         if (!connections.containsKey(clientPeerID)){
             startClientConnection(peerInfoConfigMap.get(clientPeerID));
@@ -155,7 +161,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message serverResponseForInterested(Message message, int clientPeerID) throws Exception {
-        logger.logReceivedInterestedMessage(peerID, clientPeerID);
+        Logger.logReceivedInterestedMessage(peerID, clientPeerID);
 
         // Add the client peer from the list of interested, don't return anything because
         // choking and unchoking are done via the timers
@@ -190,7 +196,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message clientResponseForHandshake(Message message, int serverPeerID) throws Exception {
-        logger.logConnectionMade(peerID, serverPeerID);
+        Logger.logConnectionMade(peerID, serverPeerID);
 
         // Sanity check to see if header and peerID are both correct
         if (HandshakeMessage.class.isInstance(message)) {
@@ -220,7 +226,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message clientResponseForChoke(Message message, int serverPeerID) throws Exception {
-        logger.logChoking(peerID, serverPeerID);
+        Logger.logChoking(peerID, serverPeerID);
 
         // Return null message and don't do anything else
         return null;
@@ -228,7 +234,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message clientResponseForUnchoke(Message message, int serverPeerID) throws Exception {
-        logger.logUnchoking(peerID, serverPeerID);
+        Logger.logUnchoking(peerID, serverPeerID);
 
         // TODO: Determine missing piece that the server has
 
@@ -241,7 +247,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     public Message clientResponseForHave(Message message, int serverPeerID) throws Exception {
         int pieceIndex = ByteBuffer.wrap(message.getPayload()).getInt();
 
-        logger.logReceivedHaveMessage(peerID, serverPeerID, pieceIndex);
+        Logger.logReceivedHaveMessage(peerID, serverPeerID, pieceIndex);
 
         // Set the current peer to know that the other peer has this given bit
         BitSet peerBitSet = otherPeerBitfields.get(serverPeerID);
@@ -265,7 +271,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         int pieceIndex = ByteBuffer.wrap(pieceIndexBytes).getInt();
         byte[] pieceBytes = Arrays.copyOfRange(message.getPayload(), 4, message.getPayload().length);
 
-        logger.logPieceDownloaded(peerID, serverPeerID, pieceIndex, numPieces);
+        Logger.logPieceDownloaded(peerID, serverPeerID, pieceIndex, numPieces);
 
         // TODO: If peer does not currently have the piece, update the file and the bitset
 

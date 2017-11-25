@@ -23,6 +23,7 @@ public class ClientConnection {
     private ConcurrentLinkedQueue<Message> outMessageQueue;
     private ConcurrentLinkedQueue<Message> inMessageQueue;
 
+    // Represent the current peer and the server it is reaching to
     private int peerID;
     private int serverPeerID;
     private ClientMessageHandler clientMessageHandler;
@@ -70,7 +71,7 @@ public class ClientConnection {
                 listenerThread.start();
             }
 
-            // Next we will need to actually receive incoming messages based on the handler utilizing consumer
+            // Next we will need to actually receive incoming messages and process them
             handleIncomingMessages((inMessage) -> {
                 try {
                     notifyHandler(inMessage);
