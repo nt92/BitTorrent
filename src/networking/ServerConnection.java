@@ -1,6 +1,5 @@
 package networking;
 
-import messages.HandshakeMessage;
 import messages.Message;
 import messages.MessageType;
 import messages.ServerMessageHandler;
@@ -116,7 +115,7 @@ public class ServerConnection {
                     }
                 });
 
-                // Finally we need to be able to send outgoing mnessages
+                // Finally we need to be able to send outgoing messages
                 while(!outMessageQueue.isEmpty()){
 
                     Message outMessage = outMessageQueue.poll();
@@ -165,7 +164,7 @@ public class ServerConnection {
                     outMessage = serverMessageHandler.serverResponseForRequest(inMessage, clientPeerID);
                     break;
                 case HANDSHAKE:
-                    outMessage =  serverMessageHandler.serverResponseForHandshake(inMessage, clientPeerID);
+                    outMessage =  serverMessageHandler.serverResponseForHandshake(inMessage, this::clientPeerIDConsumer);
                     break;
                 default:
                     outMessage = null;
@@ -177,7 +176,10 @@ public class ServerConnection {
             }
         }
 
-
+        // Function to set the peer id after handshake
+        public void clientPeerIDConsumer(int clientPeerID){
+            this.clientPeerID = clientPeerID;
+        }
 
         public void closeConnection() throws Exception{
             in.close();

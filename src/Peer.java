@@ -8,6 +8,7 @@ import networking.ServerConnection;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class Peer implements ClientMessageHandler, ServerMessageHandler{
     private int peerID;
@@ -126,7 +127,19 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     private void startClientConnection(PeerInfoConfig peerInfo){
         ClientConnection clientConnection = new ClientConnection(peerID, this);
 
+
+
+
+
+
+
+        if(peerInfo == null){
+            System.out.println("nooo");
+        }
+
+
         // Add the connection to the other peer to the current peer's map of connections
+
         connections.put(peerInfo.getPeerID(), clientConnection);
         new Thread(() -> {
             try {
@@ -146,7 +159,13 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     // ServerMessageHandler Methods
 
     @Override
-    public Message serverResponseForHandshake(Message message, int clientPeerID) throws Exception {
+    public Message serverResponseForHandshake(Message message, Consumer<Integer> clientPeerIDConsumer) throws Exception {
+        // Downcasting message to handshake to get peerID
+        int clientPeerID = ((HandshakeMessage)message).getPeerID();
+
+        // Modify client peerID based on the consumer of the server
+        clientPeerIDConsumer.accept(clientPeerID);
+
         Logger.logConnectionReceived(peerID, clientPeerID);
 
         if (!connections.containsKey(clientPeerID)){

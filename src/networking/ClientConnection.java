@@ -34,14 +34,6 @@ public class ClientConnection {
         this.peerID = peerID;
         this.clientMessageHandler = clientMessageHandler;
 
-        try{
-            out = new DataOutputStream(clientSocket.getOutputStream());
-            out.flush();
-            in = new DataInputStream(clientSocket.getInputStream());
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-
         this.outMessageQueue = new ConcurrentLinkedQueue<>();
         this.inMessageQueue = new ConcurrentLinkedQueue<>();
     }
@@ -49,6 +41,14 @@ public class ClientConnection {
     public void startConnection(PeerInfoConfig peerInfoConfig) throws Exception {
         serverPeerID = peerInfoConfig.getPeerID();
         clientSocket = new Socket(peerInfoConfig.getHostName(), peerInfoConfig.getListeningPort());
+
+        try{
+            out = new DataOutputStream(clientSocket.getOutputStream());
+            out.flush();
+            in = new DataInputStream(clientSocket.getInputStream());
+        } catch(Exception e){
+            e.printStackTrace();
+        }
 
         // Sends handshake message initially
         sendHandshakeMessage();

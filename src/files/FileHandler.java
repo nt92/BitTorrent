@@ -24,6 +24,10 @@ public class FileHandler {
     private int pieceSize;
     private int piecesCount;
 
+    // TODO: Add byte array representing the data within the file
+    // This can be used to do the piece transferring prior to chunking individual pieces together. I think
+    // that should be done AFTER all pieces have arrived and the file is complete
+
     public FileHandler(int peerID, CommonConfig config){
         this.peerID = peerID;
         this.peerDirectory = "~/project/peer_" + this.peerID + "/";

@@ -66,7 +66,8 @@ public enum MessageType {
     }
 
     public static Message createMessageWithBytes(byte[] bytes) throws Exception {
-        if (Constants.HANDSHAKE_HEADER.equals(new String(bytes, 0, Constants.HANDSHAKE_HEADER.length()))){
+        if (bytes.length >= Constants.HANDSHAKE_HEADER.length() &&
+                Constants.HANDSHAKE_HEADER.equals(new String(bytes, 0, Constants.HANDSHAKE_HEADER.length()))){
             return new HandshakeMessage(bytes);
         } else{
             // Converted to Byte object for the type to get the MessageType

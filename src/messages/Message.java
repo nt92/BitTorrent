@@ -47,7 +47,7 @@ public class Message {
 
             // Determine the message Payload with the length given to use previously in 0 to 4
             int messageLengthInt = ByteBuffer.wrap(messageLength).getInt();
-            this.payload = Arrays.copyOfRange(data, 5, messageLengthInt);
+            this.payload = Arrays.copyOfRange(data, 5, 5 + messageLengthInt);
         }
     }
 
