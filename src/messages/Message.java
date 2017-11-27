@@ -51,6 +51,22 @@ public class Message {
         }
     }
 
+    public MessageType getMessageType() {
+        return messageType;
+    }
+
+    public byte[] getHeader() {
+        return header;
+    }
+
+    public byte[] getType() {
+        return type;
+    }
+
+    public byte[] getPayload() {
+        return payload;
+    }
+
     // Uses the method in Utility to concatenate header, type, and payload byte arrays into one large byte array
     public byte[] toByteArray(){
         return Utility.concatAll(header, type, payload);
@@ -65,13 +81,5 @@ public class Message {
                     Arrays.equals(this.payload, other.payload);
         }
         return false;
-    }
-
-    public MessageType getType(){
-        return messageType;
-    }
-
-    public byte[] getPayload() {
-        return payload;
     }
 }

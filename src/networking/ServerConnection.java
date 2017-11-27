@@ -150,7 +150,7 @@ public class ServerConnection {
         private void notifyHandler(Message inMessage) throws Exception {
 
             Message outMessage;
-            switch(inMessage.getType()){
+            switch(inMessage.getMessageType()){
                 case BITFIELD:
                     outMessage = serverMessageHandler.serverResponseForBitfield(inMessage, clientPeerID);
                     break;
