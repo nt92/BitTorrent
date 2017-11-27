@@ -2,7 +2,6 @@ package networking;
 
 import configs.PeerInfoConfig;
 import messages.ClientMessageHandler;
-import messages.HandshakeMessage;
 import messages.Message;
 import messages.MessageType;
 
@@ -106,7 +105,7 @@ public class ClientConnection {
 
     private void notifyHandler(Message inMessage) throws Exception {
         Message outMessage;
-        switch(inMessage.getType()){
+        switch(inMessage.getMessageType()){
             case BITFIELD:
                 outMessage = clientMessageHandler.clientResponseForBitfield(inMessage, serverPeerID);
                 break;
