@@ -58,13 +58,16 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
             peerIndex++;
         }
 
+        System.out.println("Starting " + peerIndex);
+
+
         PeerInfoConfig currentPeerInfo = peerList.get(peerIndex);
 
         // If the current peer has the file, we can set its bitfield
         if(currentPeerInfo.getHasFile()){
             bitField.set(0, numPieces);
-
-            // TODO: Load file from file path into memory for the peer
+            fileHandler.chunkFile();
+            System.out.println(peerIndex + " Has File");
         }
 
         // Start the server connection for the peer to begin receiving messages
@@ -317,8 +320,6 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     @Override
     public Message clientResponseForPiece(Message message, int serverPeerID) throws Exception {
-        // TODO: If file/piece is already in the current peer don't do anything
-
         // Get the piece index through payload of 0-4 being index and the rest being the actual piece
         byte[] pieceIndexBytes = Arrays.copyOfRange(message.getPayload(), 0, 4);
         int pieceIndex = ByteBuffer.wrap(pieceIndexBytes).getInt();
@@ -327,6 +328,32 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         Logger.logPieceDownloaded(peerID, serverPeerID, pieceIndex, numPieces);
 
         // TODO: If peer does not currently have the piece, update the file and the bitset
+
+        // If file/piece is already in the current peer, don't do anything
+        if(fileHandler.hasPiece(pieceIndex)){
+            return null;
+        }
+
+        // If the file is completed, save the FileHandler pieces to disk and send out NOT_INTERESTED
+        if(fileHandler.hasAllPieces()){
+            fileHandler.aggregateAllPieces();
+            // TODO: Send NOT_INTERESTED to all peers
+            return MessageType.NOT_INTERESTED.createMessageWithPayload(new byte[] {});
+        }
+        // If the file is not completed, find next missing piece from peer and send request
+        else {
+            // Get a random missing piece from the file given the two bitsets
+            int randMissingPieceIndex = fileHandler.getRandomMissingPiece(bitField, otherPeerBitfields.get(serverPeerID));
+
+            // If we are missing anything, send a request message
+            if (randMissingPieceIndex >= 0) {
+                byte[] requestPayload = ByteBuffer.allocate(4).putInt(randMissingPieceIndex).array();
+                return MessageType.REQUEST.createMessageWithPayload(requestPayload);
+            }
+        }
+
+        // TODO: Update all peers that current peer has new piece
+
 
         // After this, we need to check and see if the file is finished. If so we write the file to actual memory
         // with the file chunker. Then we send a NOT_INTERESTED message to all peers.
