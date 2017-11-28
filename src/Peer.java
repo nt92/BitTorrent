@@ -285,7 +285,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         Logger.logUnchoking(peerID, serverPeerID);
 
         // Get a random missing piece from the file given the two bitsets
-        int randMissingPieceIndex = fileHandler.getMissingPiece(bitField, otherPeerBitfields.get(serverPeerID));
+        int randMissingPieceIndex = fileHandler.getRandomMissingPiece(bitField, otherPeerBitfields.get(serverPeerID));
 
         // If we are missing anything, send a request message
         if (randMissingPieceIndex >= 0) {

@@ -4,7 +4,7 @@ import util.Constants;
 
 import java.util.List;
 
-public class peerProcess {
+public class PeerProcess {
     public static void main(String[] args) throws Exception {
         //Format of the process MUST have the peerID as an argument
         if (args.length != 1){

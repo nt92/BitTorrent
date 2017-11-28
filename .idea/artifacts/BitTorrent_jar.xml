@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BitTorrent:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BitTorrent_jar</output-path>
+    <root id="archive" name="BitTorrent.jar">
+      <element id="module-output" name="BitTorrent" />
+    </root>
+  </artifact>
+</component>

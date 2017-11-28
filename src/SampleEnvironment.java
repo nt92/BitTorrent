@@ -8,7 +8,7 @@ public class SampleEnvironment {
             int intVal = i;
             new Thread(() -> {
                 try {
-                    peerProcess.main(new String[] {"" + intVal});
+                    PeerProcess.main(new String[] {"" + intVal});
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
