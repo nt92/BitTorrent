@@ -5,6 +5,9 @@ import org.junit.Before;
 import org.junit.Test;
 import util.Constants;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.BitSet;
 
@@ -19,6 +22,33 @@ public class FileHandlerTests {
     public void setUpFileHandler() throws Exception {
         CommonConfig commonConfig = CommonConfig.createConfigFromFile(Constants.COMMON_CONFIG_FILENAME);
         fileHandler = new FileHandler(1001, commonConfig);
+    }
+
+    @Test
+    public void testChunksAndAggregates() throws Exception {
+        Path path = Paths.get("src/files/SelfPortrait.gif");
+        byte[] expected = Files.readAllBytes(path);
+        Assert.assertTrue(fileHandler.chunkFile());
+        Assert.assertTrue(fileHandler.aggregateAllPieces());
+        byte[] actual = Files.readAllBytes(path);
+        Assert.assertArrayEquals(expected, actual);
+    }
+
+    @Test
+    public void testHasAllPieces() throws Exception {
+        Assert.assertTrue(fileHandler.chunkFile());
+        Assert.assertTrue(fileHandler.hasAllPieces());
+        for (int i = 0; i < fileHandler.getPiecesCount(); i++) {
+            Assert.assertTrue(fileHandler.hasPiece(i));
+        }
+    }
+
+    @Test
+    public void testSavingPiece() throws Exception {
+        fileHandler.setPiece(0, new byte[]{ 1, 2, 3, 4 });
+        Assert.assertTrue(fileHandler.hasPiece(0));
+        Assert.assertFalse(fileHandler.hasPiece(1));
+        Assert.assertFalse(fileHandler.hasAllPieces());
     }
 
     @Test

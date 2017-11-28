@@ -30,6 +30,10 @@ public class FileHandler {
         this.random = new Random();
     }
 
+    public int getPiecesCount() {
+        return piecesCount;
+    }
+
     public boolean hasPiece(int pieceIndex) {
         byte[] bytes = pieces.get(pieceIndex);
         return bytes != null && bytes.length != 0;
@@ -45,7 +49,7 @@ public class FileHandler {
     }
 
     // Aggregates all existing chunks in pieces HashMap and saves to one file
-    public void aggregateAllPieces() {
+    public boolean aggregateAllPieces() {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         if (hasAllPieces()) {
             for (int i = 0; i < this.piecesCount; i++) {
@@ -56,16 +60,18 @@ public class FileHandler {
                     }
                 } catch (Exception e){
                     e.printStackTrace();
+                    return false;
                 }
             }
             byte[] completeData = byteStream.toByteArray();
-            saveBytesToFile(this.fileName, completeData);
+            return saveBytesToFile(completeData);
         }
+        return false;
     }
 
-    // Chunks file and stores chunks in pieces HashMap
-    public void chunkFile() {
-        Path path = Paths.get(this.peerDirectory + "/" + this.fileName);
+    // Chunks file and stores chunks in pieces HashMap. Returns true if file was chunked successfully.
+    public boolean chunkFile() {
+        Path path = Paths.get(this.fileName);
         try {
             List<FilePiece> filePieces = new ArrayList<FilePiece>();
             byte[] data = Files.readAllBytes(path);
@@ -77,8 +83,10 @@ public class FileHandler {
             for (FilePiece piece : filePieces) {
                 pieces.put(piece.pieceIndex, piece.data);
             }
+            return true;
         } catch(Exception e) {
             e.printStackTrace();
+            return false;
         }
     }
 
@@ -114,11 +122,11 @@ public class FileHandler {
         return missingPieceIndices;
     }
 
-    // Saves data to file named fileName
-    private void saveBytesToFile(String fileName, byte[] data) {
+    // Saves data to file in peerDirectory + "/" + fileName. Returns true if save was successful.
+    private boolean saveBytesToFile(byte[] data) {
         FileOutputStream fileOut = null;
         try {
-            File file = new File(this.peerDirectory + fileName);
+            File file = new File(peerDirectory + "/" + fileName);
             if(!file.getParentFile().exists()){
                 file.getParentFile().mkdirs();
             }
@@ -129,13 +137,16 @@ public class FileHandler {
             fileOut.write(data);
         } catch(Exception e) {
             e.printStackTrace();
+            return false;
         } finally {
             try {
                 if(fileOut != null){
                     fileOut.close();
                 }
+                return true;
             } catch(Exception e) {
                 e.printStackTrace();
+                return false;
             }
         }
     }
