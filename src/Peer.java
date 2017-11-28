@@ -58,7 +58,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
             peerIndex++;
         }
 
-        System.out.println("Starting " + peerIndex);
+        System.out.println("Starting " + peerID);
 
 
         PeerInfoConfig currentPeerInfo = peerList.get(peerIndex);
@@ -67,7 +67,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         if(currentPeerInfo.getHasFile()){
             bitField.set(0, numPieces);
             fileHandler.chunkFile();
-            System.out.println(peerIndex + " Has File");
+            System.out.println(peerID + " Has the Complete File");
         }
 
         // Start the server connection for the peer to begin receiving messages
