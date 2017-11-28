@@ -22,7 +22,7 @@ public class FileHandlerTests {
     }
 
     @Test
-    public void testOneMissingPieces() {
+    public void testOneMissingPiece() {
         BitSet ours = new BitSet(); // 11010
         ours.set(0, true);
         ours.set(1, true);

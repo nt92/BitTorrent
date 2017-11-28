@@ -18,10 +18,7 @@ public class FileHandler {
     private int pieceSize;
     private int piecesCount;
     private Random random;
-
-    // TODO?: Add byte array representing the data within the file
-    // This can be used to do the piece transferring prior to chunking individual pieces together. I think
-    // that should be done AFTER all pieces have arrived and the file is complete
+    private HashMap<Integer, byte[]> pieces = new HashMap<>();
 
     public FileHandler(int peerID, CommonConfig config) {
         this.peerID = peerID;
@@ -34,16 +31,11 @@ public class FileHandler {
     }
 
     public boolean hasPiece(int pieceIndex) {
-        //FIXME: do we need to retrieve from an in-memory data store and if we fail only then fall back to on disk?
-        File file = new File(this.peerDirectory + pieceIndex);
-        if (!file.getParentFile().exists()) {
-            return false;
-        }
-        return file.exists();
+        byte[] bytes = pieces.get(pieceIndex);
+        return bytes != null && bytes.length != 0;
     }
 
     public boolean hasAllPieces() {
-        //FIXME: do we need to retrieve from an in-memory data store and if we fail only then fall back to on disk?
         for(int i = 0; i < this.piecesCount; i++){
             if (!hasPiece(i)) {
                 return false;
@@ -52,37 +44,38 @@ public class FileHandler {
         return true;
     }
 
+    // Aggregates all existing chunks in pieces HashMap and saves to one file
     public void aggregateAllPieces() {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         if (hasAllPieces()) {
-            for(int i = 0; i < this.piecesCount; i++){
-                Path path = Paths.get(this.peerDirectory + i);
+            for (int i = 0; i < this.piecesCount; i++) {
                 try {
-                    byte[] data = Files.readAllBytes(path);
-                    byteStream.write(data);
+                    if (hasPiece(i)) {
+                        byte[] data = getPieceByteData(i);
+                        byteStream.write(data);
+                    }
                 } catch (Exception e){
                     e.printStackTrace();
                 }
             }
             byte[] completeData = byteStream.toByteArray();
-            saveByteArrayTo(this.fileName, completeData);
+            saveBytesToFile(this.fileName, completeData);
         }
     }
 
+    // Chunks file and stores chunks in pieces HashMap
     public void chunkFile() {
         Path path = Paths.get(this.peerDirectory + "/" + this.fileName);
         try {
             List<FilePiece> filePieces = new ArrayList<FilePiece>();
             byte[] data = Files.readAllBytes(path);
             int i = 0;
-
-            for( ; i + this.pieceSize <= this.fileSize; i += this.pieceSize){
+            for( ; i + this.pieceSize <= this.fileSize; i += this.pieceSize) {
                 filePieces.add(new FilePiece(i/this.pieceSize, Arrays.copyOfRange(data, i, i + this.pieceSize)));
             }
             filePieces.add(new FilePiece(i/this.pieceSize, Arrays.copyOfRange(data, i, this.fileSize - 1)));
-
-            for(FilePiece piece : filePieces){
-                savePiece(piece);
+            for (FilePiece piece : filePieces) {
+                pieces.put(piece.pieceIndex, piece.data);
             }
         } catch(Exception e) {
             e.printStackTrace();
@@ -91,21 +84,12 @@ public class FileHandler {
 
     // Returns the byte data for a piece given the index
     public byte[] getPieceByteData(int pieceIndex) {
-        //FIXME: do we need to retrieve from an in-memory data store and if we fail only then fall back to on disk?
-        Path path = Paths.get(this.peerDirectory + pieceIndex);
-        try {
-            return Files.readAllBytes(path);
-        } catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
+        return pieces.get(pieceIndex);
     }
 
     // Adds a piece to the file's data given pieceData and the index
-    public void addPiece(int pieceIndex, byte[] pieceData) {
-        //FIXME: do we need to keep an in-memory data store of this as well?
-        FilePiece piece = new FilePiece(pieceIndex, pieceData);
-        savePiece(piece);
+    public void setPiece(int pieceIndex, byte[] pieceData) {
+        pieces.put(pieceIndex, pieceData);
     }
 
     // Returns a random piece index from the set of missing indices given two BitSets
@@ -130,13 +114,8 @@ public class FileHandler {
         return missingPieceIndices;
     }
 
-    // Saves piece to corresponding file in peerDirectory
-    private void savePiece(FilePiece piece) {
-        saveByteArrayTo(Integer.toString(piece.pieceIndex), piece.data);
-    }
-
     // Saves data to file named fileName
-    private void saveByteArrayTo(String fileName, byte[] data) {
+    private void saveBytesToFile(String fileName, byte[] data) {
         FileOutputStream fileOut = null;
         try {
             File file = new File(this.peerDirectory + fileName);
