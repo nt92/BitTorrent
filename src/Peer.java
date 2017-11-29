@@ -29,6 +29,11 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     private CommonConfig commonConfig;
 
+    private Set<Integer> preferredNeighbors;
+    private Set<Integer> optimisticallyUnchokedNeigbor;
+
+    private ServerConnection serverConnection;
+
     // Holds the data for the actual file
     private FileHandler fileHandler;
 
@@ -46,6 +51,10 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         this.peerInfoConfigMap = new HashMap<>();
         this.connections = new HashMap<>();
         this.otherPeerBitfields = new HashMap<>();
+
+        //set the size of preferred neighbors
+        this.preferredNeighbors = new HashSet<>(commonConfig.getNumberOfPreferredNeighbors());
+        this.optimisticallyUnchokedNeigbor = new HashSet<>(1);
 
         interested = new HashSet<>();
         fileHandler = new FileHandler(peerID, commonConfig);
@@ -93,7 +102,44 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         getPreferredPeersTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // TODO: Implement logic for getting preferred peers once
+
+                HashSet<Integer> previousPreferredNeighbors = new HashSet<>();
+                HashSet<Integer> nextPreferredNeighbors = new HashSet<>();
+                // If we have the whole file, WE SHARE! Select random peeps from interested as preferred
+                if(fileHandler.hasAllPieces()){
+                    // TODO: find preferredNeighbors.size amount of new neighbors from interested
+//                    nextPreferredNeighbors = interested.randomOnes(preferredNeighbors.size());
+                }
+                // if NOT, find preferred neighbors based on fastest unchoking speeds (how fast you gave me data when I requested it)
+                else {
+                    // TODO: find preferredNeighbors.size amount of fastest unchokers
+                    //nextPreferredNeighbors = neighbors.fastest();
+                }
+
+                //now, we CHANGE our neighbors list and let them know we chose them
+                    //(+) if they are a veteran, we don't tell them anything. They know what to do.
+                    //(+) if they are a newcomer, we send them the "unchoke" message.
+                    //(-) if they are kicked out the neighborhood, we let them know with a "choke" message
+
+                for(Integer newPreferredNeighbor : nextPreferredNeighbors){
+                    if(preferredNeighbors.contains(newPreferredNeighbor)){
+                        //veteran case
+                        continue;
+                    } else {
+                        //newcomer case
+                        serverConnection.sendMessageTo(newPreferredNeighbor, "unchoke");
+                    }
+                }
+
+                for(Integer oldPreferredNeighbor : previousPreferredNeighbors){
+                    if(!nextPreferredNeighbors.contains(oldPreferredNeighbor)){
+                        //kicked out scenario
+                        serverConnection.sendMessageTo(oldPreferredNeighbor, "choke");
+                    }
+                }
+
+                preferredNeighbors = nextPreferredNeighbors;
+
 
             }
         }, 0, 1000 * commonConfig.getUnchokingInterval());
@@ -111,7 +157,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     // Creates a server connection on the given peer that spawns threads for each request
     private void startServerConnection(int serverPort){
-        ServerConnection serverConnection = new ServerConnection(this);
+        this.serverConnection = new ServerConnection(this);
         new Thread(() -> {
             try {
                 serverConnection.startServer(serverPort);
