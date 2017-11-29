@@ -94,6 +94,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
             @Override
             public void run() {
                 // TODO: Implement logic for getting preferred peers once
+
             }
         }, 0, 1000 * commonConfig.getUnchokingInterval());
     }
@@ -337,7 +338,11 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         // If the file is completed, save the FileHandler pieces to disk and send out NOT_INTERESTED
         if(fileHandler.hasAllPieces()){
             fileHandler.aggregateAllPieces();
+            Logger.logCompleteFileDownloaded(peerID);
             // TODO: Send NOT_INTERESTED to all peers
+            for(int i = 0; i < connections.size(); i++){
+
+            }
             return MessageType.NOT_INTERESTED.createMessageWithPayload(new byte[] {});
         }
         // If the file is not completed, find next missing piece from peer and send request
@@ -351,6 +356,8 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
                 return MessageType.REQUEST.createMessageWithPayload(requestPayload);
             }
         }
+
+
 
         // TODO: Update all peers that current peer has new piece
 

@@ -1,65 +1,7 @@
 Peer 1001 is connected from Peer 1002
-Peer 1002 is connected from Peer 1001
-Peer 1001 makes a connection to Peer 1002
-Peer 1002 makes a connection to Peer 1001
-Peer 1001 received the 'interested' message from 1002
 Peer 1001 is connected from Peer 1003
-Peer 1002 is connected from Peer 1003
-Peer 1003 makes a connection to Peer 1001
-Peer 1003 makes a connection to Peer 1002
-Peer 1001 received the 'interested' message from 1003
-Peer 1003 is connected from Peer 1001
-Peer 1001 makes a connection to Peer 1003
-Peer 1003 is connected from Peer 1002
-Peer 1002 makes a connection to Peer 1003
-Peer 1002 is connected from Peer 1004
 Peer 1001 is connected from Peer 1004
-Peer 1003 is connected from Peer 1004
-Peer 1004 is connected from Peer 1002
-Peer 1002 makes a connection to Peer 1004
-Peer 1004 is connected from Peer 1001
-Peer 1004 is connected from Peer 1003
-Peer 1003 makes a connection to Peer 1004
-Peer 1004 makes a connection to Peer 1002
-Peer 1004 makes a connection to Peer 1003
-Peer 1004 makes a connection to Peer 1001
-Peer 1001 makes a connection to Peer 1004
-Peer 1001 received the 'interested' message from 1004
 Peer 1001 is connected from Peer 1005
-Peer 1003 is connected from Peer 1005
-Peer 1002 is connected from Peer 1005
-Peer 1005 makes a connection to Peer 1003
-Peer 1004 is connected from Peer 1005
-Peer 1005 makes a connection to Peer 1001
-Peer 1005 makes a connection to Peer 1004
-Peer 1005 makes a connection to Peer 1002
-Peer 1005 is connected from Peer 1001
-Peer 1005 is connected from Peer 1004
-Peer 1001 makes a connection to Peer 1005
-Peer 1004 makes a connection to Peer 1005
-Peer 1005 is connected from Peer 1003
-Peer 1005 is connected from Peer 1002
-Peer 1002 makes a connection to Peer 1005
-Peer 1003 makes a connection to Peer 1005
-Peer 1001 received the 'interested' message from 1005
 Peer 1001 is connected from Peer 1006
-Peer 1002 is connected from Peer 1006
-Peer 1006 makes a connection to Peer 1002
-Peer 1005 is connected from Peer 1006
-Peer 1006 makes a connection to Peer 1001
-Peer 1004 is connected from Peer 1006
-Peer 1006 makes a connection to Peer 1005
-Peer 1006 makes a connection to Peer 1004
-Peer 1006 is connected from Peer 1005
-Peer 1006 is connected from Peer 1004
-Peer 1006 is connected from Peer 1002
-Peer 1006 is connected from Peer 1001
-Peer 1005 makes a connection to Peer 1006
-Peer 1003 is connected from Peer 1006
-Peer 1006 makes a connection to Peer 1003
-Peer 1001 makes a connection to Peer 1006
-Peer 1001 received the 'interested' message from 1006
-Peer 1004 makes a connection to Peer 1006
-Peer 1002 makes a connection to Peer 1006
-Peer 1006 is connected from Peer 1003
-Peer 1003 makes a connection to Peer 1006
+Peer 1001 is connected from Peer 1003
+Peer 1001 is connected from Peer 1002
