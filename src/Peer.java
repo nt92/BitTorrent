@@ -29,7 +29,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
     private CommonConfig commonConfig;
 
-    private Set<Integer> preferredNeighbors;
+    private ArrayList<Integer> preferredNeighbors;
     Integer optimisticallyUnchokedNeigbor;
 
     private ServerConnection serverConnection;
@@ -53,7 +53,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         this.otherPeerBitfields = new HashMap<>();
 
         //set the size of preferred neighbors
-        this.preferredNeighbors = new HashSet<>(commonConfig.getNumberOfPreferredNeighbors());
+        this.preferredNeighbors = new ArrayList<>(commonConfig.getNumberOfPreferredNeighbors());
         this.optimisticallyUnchokedNeigbor = -1;
 
         interested = new ArrayList<>();
@@ -103,12 +103,28 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
             @Override
             public void run() {
 
-                HashSet<Integer> previousPreferredNeighbors = new HashSet<>();
-                HashSet<Integer> nextPreferredNeighbors = new HashSet<>();
+                ArrayList<Integer> previousPreferredNeighbors = new ArrayList<Integer>();
+                ArrayList<Integer> nextPreferredNeighbors = new ArrayList<Integer>();
                 // If we have the whole file, WE SHARE! Select random peeps from interested as preferred
                 if(fileHandler.hasAllPieces()){
-                    // TODO: find preferredNeighbors.size amount of new neighbors from interested
-//                    nextPreferredNeighbors = interested.randomOnes(preferredNeighbors.size());
+                    preferredNeighbors.clear();
+                    if(interested.size() > 0) {
+                        while(true) {
+                            //get random interested value
+                            Integer newPreferredNeighbor;
+                            int randomIndex = new Random().nextInt(interested.size());
+                            newPreferredNeighbor = interested.get(randomIndex);
+
+                            //check if it was already added to nextPreferredNeighbors
+                            if(!nextPreferredNeighbors.contains(newPreferredNeighbor)){
+                                nextPreferredNeighbors.add(newPreferredNeighbor);
+                            }
+
+                            if(nextPreferredNeighbors.size() >= commonConfig.getNumberOfPreferredNeighbors()) {
+                                break;
+                            }
+                        }
+                    }
                 }
                 // if NOT, find preferred neighbors based on fastest unchoking speeds (how fast you gave me data when I requested it)
                 else {
@@ -139,7 +155,10 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
                 }
 
                 preferredNeighbors = nextPreferredNeighbors;
+                if(preferredNeighbors.size() != 0){
+                    System.out.println(peerID + " loves " + preferredNeighbors);
 
+                }
 
             }
         }, 0, 1000 * commonConfig.getUnchokingInterval());
@@ -172,7 +191,13 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
                     // and replace our old friend with the new friend
                     optimisticallyUnchokedNeigbor = newOptimisticallyUnchokedNeighbor;
-                    System.out.println(optimisticallyUnchokedNeigbor);
+
+                    try {
+                        Logger.logChangeOptimisticallyUnchokedNeighbor(peerID, optimisticallyUnchokedNeigbor);
+                        System.out.println(optimisticallyUnchokedNeigbor);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
 
 

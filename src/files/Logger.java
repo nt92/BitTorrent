@@ -76,7 +76,7 @@ public class Logger {
         logger.append("Peer " + peerID + " has the optimistically unchoked neighbor " + otherID + "\n");
     }
 
-    public static void logUnchoking(int peerID, int otherID) throws Exception {
+    public static void logUnchoking(int peerID, Integer otherID) throws Exception {
         Logger logger = getInstance(peerID);
         logger.append("Peer " + peerID + " is unchoked by " + otherID + "\n");
     }
