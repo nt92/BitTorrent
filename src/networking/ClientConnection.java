@@ -96,6 +96,15 @@ public class ClientConnection {
         }
     }
 
+    //sending message to certain client
+    public void sendMessageTo(String message){
+        // TODO: Send message to requested client
+    }
+
+    public void sendMessageTo(Message message){
+        // TODO: Send message to requested client
+    }
+
     // Method to basically take the message and pass it through as a consumer to the handler
     public void handleIncomingMessages(Consumer<Message> messageConsumer){
         while(!inMessageQueue.isEmpty()){
