@@ -35,7 +35,7 @@ public class Logger {
             sharedInstance = new Logger(peerID);
         }
         if (sharedInstance.peerID != peerID) {
-            throw new Exception("ERROR: Tried to create a Logger with a difference peerID after already having created one.");
+//            throw new Exception("ERROR: Tried to create a Logger with a difference peerID after already having created one.");
         }
         return sharedInstance;
     }

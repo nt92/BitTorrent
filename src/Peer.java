@@ -25,12 +25,12 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
     private Map<Integer, BitSet> otherPeerBitfields;
 
     // Set of interested peers for the peer to send messages to
-    private Set<Integer> interested;
+    private ArrayList<Integer> interested;
 
     private CommonConfig commonConfig;
 
     private Set<Integer> preferredNeighbors;
-    private Set<Integer> optimisticallyUnchokedNeigbor;
+    Integer optimisticallyUnchokedNeigbor;
 
     private ServerConnection serverConnection;
 
@@ -54,9 +54,9 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
 
         //set the size of preferred neighbors
         this.preferredNeighbors = new HashSet<>(commonConfig.getNumberOfPreferredNeighbors());
-        this.optimisticallyUnchokedNeigbor = new HashSet<>(1);
+        this.optimisticallyUnchokedNeigbor = -1;
 
-        interested = new HashSet<>();
+        interested = new ArrayList<>();
         fileHandler = new FileHandler(peerID, commonConfig);
     }
 
@@ -150,7 +150,33 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
         getOptimisticallyUnchokedPeerTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // TODO: Implement logic for optimistically unchoking a peer once
+                // in selecting the next Optimistically Unchocked, they have to
+                    // - not be already unchoked (aka preferred neighbor or current OptimiUnchocked
+                    // - be interested
+                Integer newOptimisticallyUnchokedNeighbor;
+                if(interested.size() > 0){
+                    while(true){
+                        int randomIndex = new Random().nextInt(interested.size());
+                        newOptimisticallyUnchokedNeighbor = interested.get(randomIndex);
+                        if(newOptimisticallyUnchokedNeighbor != optimisticallyUnchokedNeigbor && !preferredNeighbors.contains(newOptimisticallyUnchokedNeighbor))
+                            //is NOT already unchoked as an optimisitically unchoked neighbor && is NOT already unchoked as a preferred neighbor
+                            break;
+                    }
+
+                    // now that we know our friend, we let them know with an "unchoke"...
+                    serverConnection.sendMessageTo(newOptimisticallyUnchokedNeighbor, "unchoke");
+                    // kick out our old friend and choke our old friend (unless they are currently ALSO selected as a preferred neighbor)...
+                    if(!preferredNeighbors.contains(optimisticallyUnchokedNeigbor)){
+                        serverConnection.sendMessageTo(optimisticallyUnchokedNeigbor, "choke");
+                    }
+
+                    // and replace our old friend with the new friend
+                    optimisticallyUnchokedNeigbor = newOptimisticallyUnchokedNeighbor;
+                    System.out.println(optimisticallyUnchokedNeigbor);
+                }
+
+
+
             }
         }, 0, 1000 * commonConfig.getOptimisticUnchokingInterval());
     }
