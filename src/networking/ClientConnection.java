@@ -1,148 +1,88 @@
 package networking;
 
 import configs.PeerInfoConfig;
-import messages.ClientMessageHandler;
-import messages.Message;
-import messages.MessageType;
-
+import messages.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Consumer;
 
 public class ClientConnection {
+    private int peerID;
+    private MessageDispatcher dispatcher;
+
     private Socket clientSocket;
     private DataOutputStream out;
     private DataInputStream in;
 
-    // Concurrent queues to handle incoming and outcoming messages in a thread-safe manner
-    private ConcurrentLinkedQueue<Message> outMessageQueue;
-    private ConcurrentLinkedQueue<Message> inMessageQueue;
-
-    // Represent the current peer and the server it is reaching to
-    private int peerID;
-    private int serverPeerID;
-    private ClientMessageHandler clientMessageHandler;
+    private int otherPeerID;
+    private ConcurrentLinkedQueue<ActualMessage> inboundQueue;
+    private ConcurrentLinkedQueue<byte[]> outboundQueue;
 
     private Thread listenerThread;
 
-    public ClientConnection(int peerID, ClientMessageHandler clientMessageHandler) {
+    public ClientConnection(int peerID, MessageDispatcher dispatcher) {
         this.peerID = peerID;
-        this.clientMessageHandler = clientMessageHandler;
-
-        this.outMessageQueue = new ConcurrentLinkedQueue<>();
-        this.inMessageQueue = new ConcurrentLinkedQueue<>();
+        this.dispatcher = dispatcher;
+        this.inboundQueue = new ConcurrentLinkedQueue<>();
+        this.outboundQueue = new ConcurrentLinkedQueue<>();
     }
 
-    public void startConnection(PeerInfoConfig peerInfoConfig) throws Exception {
-        serverPeerID = peerInfoConfig.getPeerID();
+    public void openConnectionWithConfig(PeerInfoConfig peerInfoConfig) throws Exception {
+        otherPeerID = peerInfoConfig.getPeerID();
         clientSocket = new Socket(peerInfoConfig.getHostName(), peerInfoConfig.getListeningPort());
-
-        try{
+        try {
             out = new DataOutputStream(clientSocket.getOutputStream());
             out.flush();
             in = new DataInputStream(clientSocket.getInputStream());
-        } catch(Exception e){
+        } catch(Exception e) {
             e.printStackTrace();
         }
 
-        // Sends handshake message initially
-        sendHandshakeMessage();
+        HandshakeMessage handshakeMessage = new HandshakeMessage(peerID);
+        outboundQueue.add(handshakeMessage.toBytes());
 
         while (true) {
-            // First we will listen for the incoming messages and if the thread does not exist or is dead
-            // we will create a new thread and do so
+            // Spawn listenerThread if it's null or dead
             if (listenerThread == null || !listenerThread.isAlive()){
                 listenerThread = new Thread(() -> {
-                    try{
+                    try {
                         int length = in.readInt();
-                        byte[] requestMessage = new byte[length];
-                        in.readFully(requestMessage);
-                        Message incomingMessage = MessageType.createMessageWithBytes(requestMessage);
-                        inMessageQueue.add(incomingMessage);
-                    } catch (Exception e){
-                        e.printStackTrace();
+                        byte[] bytes = new byte[length];
+                        in.readFully(bytes);
+                        ActualMessage message = new ActualMessage(bytes);
+                        inboundQueue.add(message);
+                    } catch (Exception e2) {
+                        e2.printStackTrace();
                     }
                 });
                 listenerThread.start();
             }
 
-            // Next we will need to actually receive incoming messages and process them
-            handleIncomingMessages((inMessage) -> {
+            // Take care of messages in inboundQueue
+            while(!inboundQueue.isEmpty()){
+                ActualMessage message = inboundQueue.poll();
+                dispatcher.dispatchMessage(message, otherPeerID);
+            }
+
+            // Take care of messages in outboundQueue
+            while (!outboundQueue.isEmpty()) {
+                byte[] outBytes = outboundQueue.poll();
                 try {
-                    notifyHandler(inMessage);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
-
-            // Finally we need to be able to send outgoing mnessages
-            while(!outMessageQueue.isEmpty()){
-
-                Message outMessage = outMessageQueue.poll();
-                try{
-                    // Output the length of the message followed by the actual bytes of it
-                    out.writeInt(outMessage.toByteArray().length);
-                    out.write(outMessage.toByteArray());
+                    out.write(outBytes);
                     out.flush();
-                }
-                catch(IOException ioException){
-                    ioException.printStackTrace();
+                } catch(Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
     }
 
-    // Method to basically take the message and pass it through as a consumer to the handler
-    public void handleIncomingMessages(Consumer<Message> messageConsumer){
-        while(!inMessageQueue.isEmpty()){
-            messageConsumer.accept(inMessageQueue.poll());
-        }
-    }
-
-    private void notifyHandler(Message inMessage) throws Exception {
-        Message outMessage;
-        switch(inMessage.getMessageType()){
-            case BITFIELD:
-                outMessage = clientMessageHandler.clientResponseForBitfield(inMessage, serverPeerID);
-                break;
-            case CHOKE:
-                outMessage = clientMessageHandler.clientResponseForChoke(inMessage, serverPeerID);
-                break;
-            case UNCHOKE:
-                outMessage = clientMessageHandler.clientResponseForUnchoke(inMessage, serverPeerID);
-                break;
-            case HAVE:
-                outMessage = clientMessageHandler.clientResponseForHave(inMessage, serverPeerID);
-                break;
-            case PIECE:
-                outMessage = clientMessageHandler.clientResponseForPiece(inMessage, serverPeerID);
-                break;
-            case HANDSHAKE:
-                outMessage =  clientMessageHandler.clientResponseForHandshake(inMessage, serverPeerID);
-                break;
-            default:
-                outMessage = null;
-        }
-
-        // If it is a valid message, we can add it to the outgoing queue
-        if (outMessage != null){
-            outMessageQueue.add(outMessage);
-        }
-    }
-
-    public void sendHandshakeMessage() throws Exception {
-        // Creates new handshake message with peerID and adds to the outbound queue
-        byte[] handshakePeerID = ByteBuffer.allocate(4).putInt(peerID).array();
-        Message handshake = MessageType.HANDSHAKE.createMessageWithPayload(handshakePeerID);
-        outMessageQueue.add(handshake);
+    public void sendActualMessage(ActualMessage message) throws Exception {
+        outboundQueue.add(message.toBytes());
     }
 
     public void closeConnection() throws Exception {
-        in.close();
         out.close();
         clientSocket.close();
     }

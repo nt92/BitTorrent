@@ -1,73 +1,50 @@
 package networking;
 
-import messages.Message;
-import messages.MessageType;
-import messages.ServerMessageHandler;
+import messages.HandshakeMessage;
+import messages.MessageDispatcher;
+import util.Constants;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.function.Consumer;
 
 public class ServerConnection {
-    private ServerSocket serverSocket;
-    private ServerMessageHandler serverMessageHandler;
-
-    // For sending every peer a message if need be
+    private MessageDispatcher dispatcher;
     private List<RequestHandlerThread> requestHandlerThreads;
+    private ServerSocket serverSocket;
 
-    public ServerConnection(ServerMessageHandler serverMessageHandler){
-        this.serverMessageHandler = serverMessageHandler;
+    public ServerConnection(MessageDispatcher dispatcher) {
+        this.dispatcher = dispatcher;
         this.requestHandlerThreads = new ArrayList<>();
     }
 
-    public void startServer(int port) throws Exception{
+    public void openPort(int port) throws Exception {
         serverSocket = new ServerSocket(port);
         while (true) {
-            RequestHandlerThread requestHandlerThread = new RequestHandlerThread(serverSocket.accept(), serverMessageHandler);
+            ServerConnection.RequestHandlerThread requestHandlerThread = new ServerConnection.RequestHandlerThread(serverSocket.accept(), dispatcher);
             requestHandlerThreads.add(requestHandlerThread);
             requestHandlerThread.start();
         }
     }
 
-    public void closeConnection() throws Exception{
+    public void close() throws Exception {
         serverSocket.close();
     }
 
-    // A new thread is created for each request sent to the server
+    // A thread that handles responding to a single message
     private static class RequestHandlerThread extends Thread {
-        // Socket for connection and input and output streams for i/o
-        private Socket connection;
+        private Socket socket;
         private DataInputStream in;
-        private DataOutputStream out;
-
-        // Concurrent queues to handle incoming and outcoming messages in a thread-safe manner
-        private ConcurrentLinkedQueue<Message> outMessageQueue;
-        private ConcurrentLinkedQueue<Message> inMessageQueue;
-
-        private int clientPeerID;
-        ServerMessageHandler serverMessageHandler;
-
-        // Thread to handle incoming requests
+        private MessageDispatcher dispatcher;
         private Thread listenerThread;
 
-        public RequestHandlerThread(Socket connection, ServerMessageHandler serverMessageHandler) {
-            this.connection = connection;
-            this.serverMessageHandler = serverMessageHandler;
-            this.clientPeerID = 0;
-            outMessageQueue = new ConcurrentLinkedQueue<>();
-            inMessageQueue = new ConcurrentLinkedQueue<>();
-
-            // Set up the in and out data streams
-            try{
-                out = new DataOutputStream(connection.getOutputStream());
-                out.flush();
-                in = new DataInputStream(connection.getInputStream());
+        public RequestHandlerThread(Socket socket, MessageDispatcher dispatcher) {
+            this.socket = socket;
+            this.dispatcher = dispatcher;
+            try {
+                in = new DataInputStream(socket.getInputStream());
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -75,116 +52,36 @@ public class ServerConnection {
 
         public void run() {
             try {
-                handleRequest();
+                while (true) {
+                    listen();
+                }
             } catch (Exception e1) {
                 e1.printStackTrace();
             } finally {
                 try {
-                    closeConnection();
+                    in.close();
+                    socket.close();
                 } catch (Exception e2) {
                     e2.printStackTrace();
                 }
             }
         }
 
-        public void handleRequest() throws Exception{
-            while (true) {
-                // First we will listen for the incoming messages and if the thread does not exist or is dead
-                // we will create a new thread and do so
-                if (listenerThread == null || !listenerThread.isAlive()){
-                    listenerThread = new Thread(() -> {
-                        try{
-                            int length = in.readInt();
-                            byte[] requestMessage = new byte[length];
-                            in.readFully(requestMessage);
-                            Message incomingMessage = MessageType.createMessageWithBytes(requestMessage);
-                            inMessageQueue.add(incomingMessage);
-                        } catch (Exception e){
-                    e.printStackTrace();
-                        }
-                    });
-                    listenerThread.start();
-                }
-
-                // Next we will need to actually receive incoming messages based on the handler utilizing consumer
-                handleIncomingMessages((inMessage) -> {
+        public void listen() {
+            // Spawn listenerThread if it's null or dead
+            if (listenerThread == null || !listenerThread.isAlive()) {
+                listenerThread = new Thread(() -> {
                     try {
-                        notifyHandler(inMessage);
+                        byte[] bytes = new byte[Constants.HANDSHAKE_MESSAGE_SIZE_BYTES];
+                        in.readFully(bytes);
+                        HandshakeMessage handshakeMessage = new HandshakeMessage(bytes);
+                        dispatcher.dispatchMessage(handshakeMessage);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 });
-
-                // Finally we need to be able to send outgoing messages
-                while(!outMessageQueue.isEmpty()){
-
-                    Message outMessage = outMessageQueue.poll();
-                    try{
-                        // Output the length of the message followed by the actual bytes of it
-                        out.writeInt(outMessage.toByteArray().length);
-                        out.write(outMessage.toByteArray());
-                        out.flush();
-                    }
-                    catch(IOException ioException){
-                        ioException.printStackTrace();
-                    }
-                }
-//                int length = in.readInt();
-//                byte[] bytes = new byte[length];
-//                in.readFully(bytes);
-//
-//                byte[] bytesToSend = getResponseBytesFromHandler(bytes);
-//                if (bytesToSend != null) {
-//                    outputBytes(bytesToSend);
-//                }
+                listenerThread.start();
             }
-        }
-
-        // Method to basically take the message and pass it through as a consumer to the handler
-        public void handleIncomingMessages(Consumer<Message> messageConsumer){
-            while(!inMessageQueue.isEmpty()){
-                messageConsumer.accept(inMessageQueue.poll());
-            }
-        }
-
-        private void notifyHandler(Message inMessage) throws Exception {
-
-            Message outMessage;
-            switch(inMessage.getMessageType()){
-                case BITFIELD:
-                    outMessage = serverMessageHandler.serverResponseForBitfield(inMessage, clientPeerID);
-                    break;
-                case INTERESTED:
-                    outMessage = serverMessageHandler.serverResponseForInterested(inMessage, clientPeerID);
-                    break;
-                case NOT_INTERESTED:
-                    outMessage = serverMessageHandler.serverResponseForUninterested(inMessage, clientPeerID);
-                    break;
-                case REQUEST:
-                    outMessage = serverMessageHandler.serverResponseForRequest(inMessage, clientPeerID);
-                    break;
-                case HANDSHAKE:
-                    outMessage =  serverMessageHandler.serverResponseForHandshake(inMessage, this::clientPeerIDConsumer);
-                    break;
-                default:
-                    outMessage = null;
-            }
-
-            // If it is a valid message, we can add it to the outgoing queue
-            if (outMessage != null){
-                outMessageQueue.add(outMessage);
-            }
-        }
-
-        // Function to set the peer id after handshake
-        public void clientPeerIDConsumer(int clientPeerID){
-            this.clientPeerID = clientPeerID;
-        }
-
-        public void closeConnection() throws Exception{
-            in.close();
-            out.close();
-            connection.close();
         }
     }
 }

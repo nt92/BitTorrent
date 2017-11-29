@@ -6,18 +6,36 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import static messages.MessageType.HANDSHAKE;
+public class HandshakeMessage implements Message {
+    private int peerID;
 
-public class HandshakeMessage extends Message {
-    int peerID;
+    public HandshakeMessage(int peerID) {
+        this.peerID = peerID;
+    }
 
-    // Same as Message except easy access to peerID for use later on
     public HandshakeMessage(byte[] bytes) throws Exception {
-        super(bytes, HANDSHAKE);
-        peerID = ByteBuffer.wrap(Arrays.copyOfRange(bytes,28, 32)).getInt();
+        if (bytes.length != 32) {
+            throw new Exception("Incorrect message length: the bytes do not correspond to a handshake message.");
+        }
+        byte[] headerBytes = Arrays.copyOfRange(bytes, 0, 18);
+        String headerField = new String(headerBytes, "ASCII");
+        if (!headerField.equals(Constants.HANDSHAKE_HEADER)) {
+            throw new Exception("Incorrect header field: the bytes do not correspond to a handshake message.");
+        }
+        peerID = ByteBuffer.wrap(Arrays.copyOfRange(bytes, 28, 32)).getInt();
     }
 
     public int getPeerID() {
-        return this.peerID;
+        return peerID;
+    }
+
+    public byte[] toBytes() throws Exception {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        stream.write(Constants.HANDSHAKE_HEADER.getBytes("ASCII"));
+        byte[] zeroes = new byte[10];
+        Arrays.fill(zeroes, (byte)0);
+        stream.write(zeroes);
+        stream.write(ByteBuffer.allocate(4).putInt(peerID).array());
+        return stream.toByteArray();
     }
 }
