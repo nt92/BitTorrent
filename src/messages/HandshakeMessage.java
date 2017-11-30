@@ -20,7 +20,7 @@ public class HandshakeMessage {
         byte[] headerBytes = Arrays.copyOfRange(bytes, 0, 18);
         String headerField = new String(headerBytes, "ASCII");
         if (!headerField.equals(Constants.HANDSHAKE_HEADER)) {
-            throw new Exception("Incorrect header field: the bytes do not correspond to a handshake message.");
+            throw new Exception("Incorrect header field: " + headerField + " does not equal " + Constants.HANDSHAKE_HEADER);
         }
         peerID = ByteBuffer.wrap(Arrays.copyOfRange(bytes, 28, 32)).getInt();
     }
@@ -31,6 +31,7 @@ public class HandshakeMessage {
 
     public byte[] toBytes() throws Exception {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        stream.write(ByteBuffer.allocate(4).putInt(32).array());
         stream.write(Constants.HANDSHAKE_HEADER.getBytes("ASCII"));
         byte[] zeroes = new byte[10];
         Arrays.fill(zeroes, (byte)0);

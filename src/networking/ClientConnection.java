@@ -16,15 +16,11 @@ public class ClientConnection {
     private DataInputStream in;
 
     private int otherPeerID;
-    private ConcurrentLinkedQueue<ActualMessage> inboundQueue;
     private ConcurrentLinkedQueue<byte[]> outboundQueue;
-
-    private Thread listenerThread;
 
     public ClientConnection(int peerID, MessageDispatcher dispatcher) {
         this.peerID = peerID;
         this.dispatcher = dispatcher;
-        this.inboundQueue = new ConcurrentLinkedQueue<>();
         this.outboundQueue = new ConcurrentLinkedQueue<>();
     }
 
@@ -43,28 +39,6 @@ public class ClientConnection {
         outboundQueue.add(handshakeMessage.toBytes());
 
         while (true) {
-            // Spawn listenerThread if it's null or dead
-            if (listenerThread == null || !listenerThread.isAlive()){
-                listenerThread = new Thread(() -> {
-                    try {
-                        int length = in.readInt();
-                        byte[] bytes = new byte[length];
-                        in.readFully(bytes);
-                        ActualMessage message = new ActualMessage(bytes);
-                        inboundQueue.add(message);
-                    } catch (Exception e2) {
-                        e2.printStackTrace();
-                    }
-                });
-                listenerThread.start();
-            }
-
-            // Take care of messages in inboundQueue
-            while(!inboundQueue.isEmpty()){
-                ActualMessage message = inboundQueue.poll();
-                dispatcher.dispatchMessage(message, otherPeerID);
-            }
-
             // Take care of messages in outboundQueue
             while (!outboundQueue.isEmpty()) {
                 byte[] outBytes = outboundQueue.poll();

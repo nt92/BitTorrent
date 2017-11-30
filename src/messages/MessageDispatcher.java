@@ -14,8 +14,8 @@ public class MessageDispatcher {
         this.infoProvider = infoProvider;
     }
 
-    public void dispatchMessage(ActualMessage message, int senderPeerID) {
-        ClientConnection connection = connectionProvider.connectionForPeerID(senderPeerID);
+    public void dispatchMessage(ActualMessage message) {
+        //ClientConnection connection = connectionProvider.connectionForPeerID(senderPeerID);
         /*
         Message outMessage;
         switch(inMessage.getMessageType()){
@@ -40,9 +40,13 @@ public class MessageDispatcher {
         */
     }
 
-    public void dispatchMessage(HandshakeMessage message) throws Exception {
+    public void dispatchMessage(HandshakeMessage message) {
         ClientConnection connection = connectionProvider.connectionForPeerID(message.getPeerID());
         ActualMessage actualMessage = MessageFactory.bitfieldMessage(infoProvider.currentBitfield());
-        connection.sendActualMessage(actualMessage);
+        try {
+            connection.sendActualMessage(actualMessage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
