@@ -139,7 +139,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
                             break;
                         }
                     }
-                    peerDownloadRates.clear();
+                    peerDownloadRates.clear();I
                 }
 
                 //now, we CHANGE our neighbors list and let them know we chose them
