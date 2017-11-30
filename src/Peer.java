@@ -5,6 +5,7 @@ import files.FileHandler;
 import messages.*;
 import networking.ClientConnection;
 import networking.ServerConnection;
+import util.MapUtil;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -130,7 +131,15 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler{
                 // if NOT, find preferred neighbors based on fastest unchoking speeds (how fast you gave me data when I requested it)
                 else {
                     // TODO: find preferredNeighbors.size amount of fastest unchokers
-                    //nextPreferredNeighbors = neighbors.fastest();
+                    peerDownloadRates = MapUtil.sortByValue(peerDownloadRates);
+                    for(Map.Entry<Integer, Integer> entry: peerDownloadRates.entrySet()){
+                        nextPreferredNeighbors.add(entry.getKey());
+
+                        if(nextPreferredNeighbors.size() >= commonConfig.getNumberOfPreferredNeighbors()) {
+                            break;
+                        }
+                    }
+                    peerDownloadRates.clear();
                 }
 
                 //now, we CHANGE our neighbors list and let them know we chose them
