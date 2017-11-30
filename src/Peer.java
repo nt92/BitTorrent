@@ -1,18 +1,16 @@
-import com.sun.deploy.util.SessionState;
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
 import files.FileHandler;
 import files.Logger;
 import messages.*;
 import networking.ClientConnection;
-import networking.ConnectionProvider;
 import networking.ServerConnection;
 import util.MapUtil;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 
-public class Peer implements ConnectionProvider, MessageHandler {
+public class Peer implements MessageHandler {
     private int peerID;
     private BitSet bitField;
     private int numPieces;
@@ -90,7 +88,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
         startServer(currentPeerInfo.getListeningPort());
 
         // Start TCP connections with the peers in the list before the given one to start server transferring messages/data
-        for (int i = 0; i < peerIndex; i++){
+        for (int i = 0; i < peerIndex; i++) {
             startClientConnection(peerList.get(i));
         }
 
@@ -267,7 +265,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
                 serverConnection.openPort(serverPort);
             } catch (Exception e1) {
                 e1.printStackTrace();
-            } finally{
+            } finally {
                 try {
                     serverConnection.close();
                 } catch (Exception e2) {
@@ -279,7 +277,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
 
     // Starts connection to another client in order to send the messages
     private void startClientConnection(PeerInfoConfig peerInfo) {
-        ClientConnection clientConnection = new ClientConnection(peerID, messageDispatcher);
+        ClientConnection clientConnection = new ClientConnection(peerID);
         connections.put(peerInfo.getPeerID(), clientConnection);
         new Thread(() -> {
             try {
@@ -300,7 +298,6 @@ public class Peer implements ConnectionProvider, MessageHandler {
     // MessageHandler
 
     public void handleActualMessage(ActualMessage message, int otherPeerID) {
-        System.out.println(message.getType() + " from " + otherPeerID + " to " + peerID);
         ClientConnection connection = connectionForPeerID(otherPeerID);
         ActualMessage actualMessage;
         switch (message.getType()) {

@@ -2,33 +2,29 @@ package networking;
 
 import configs.PeerInfoConfig;
 import messages.*;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ClientConnection {
     private int peerID;
-    private MessageDispatcher dispatcher;
-
-    private Socket clientSocket;
-    private DataOutputStream out;
-
     private ConcurrentLinkedQueue<byte[]> outboundQueue;
 
-    public ClientConnection(int peerID, MessageDispatcher dispatcher) {
+    private Socket socket;
+    private DataOutputStream out;
+
+    public ClientConnection(int peerID) {
         this.peerID = peerID;
-        this.dispatcher = dispatcher;
         this.outboundQueue = new ConcurrentLinkedQueue<>();
     }
 
     public void openConnectionWithConfig(PeerInfoConfig peerInfoConfig) throws Exception {
-        clientSocket = new Socket(peerInfoConfig.getHostName(), peerInfoConfig.getListeningPort());
+        socket = new Socket(peerInfoConfig.getHostName(), peerInfoConfig.getListeningPort());
         try {
-            out = new DataOutputStream(clientSocket.getOutputStream());
-            out.flush();
+            out = new DataOutputStream(socket.getOutputStream());
         } catch(Exception e) {
             e.printStackTrace();
+            return;
         }
 
         HandshakeMessage handshakeMessage = new HandshakeMessage(peerID);
@@ -54,6 +50,6 @@ public class ClientConnection {
 
     public void closeConnection() throws Exception {
         out.close();
-        clientSocket.close();
+        socket.close();
     }
 }
