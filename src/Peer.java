@@ -1,3 +1,4 @@
+import com.sun.deploy.util.SessionState;
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
 import files.FileHandler;
@@ -32,7 +33,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
     private CommonConfig commonConfig;
 
     private ArrayList<Integer> preferredNeighbors;
-    Integer optimisticallyUnchokedNeigbor;
+    Integer optimisticallyUnchokedNeighbor;
 
     private ServerConnection serverConnection;
 
@@ -61,7 +62,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
 
         //set the size of preferred neighbors
         this.preferredNeighbors = new ArrayList<>(commonConfig.getNumberOfPreferredNeighbors());
-        this.optimisticallyUnchokedNeigbor = -1;
+        this.optimisticallyUnchokedNeighbor = -1;
         this.peerDownloadRates = new HashMap<>();
 
         interested = new ArrayList<>();
@@ -102,6 +103,11 @@ public class Peer implements ConnectionProvider, MessageHandler {
             this.peerInfoConfigMap.put(peerInfoConfig.getPeerID(), peerInfoConfig);
         }
 
+        while (connections.size() < peerList.size() - 1) {
+            Thread.sleep(1000);
+        }
+
+        System.out.println("CONNECTIONS to " + peerID + " are " + connections);
         // Timer methods that run on the unchoking and optimistically unchoking intervals utilizing TimerTask
         getPreferredPeers();
         getOptimisticallyUnchokedPeer();
@@ -159,7 +165,10 @@ public class Peer implements ConnectionProvider, MessageHandler {
                     } else {
                         //newcomer case
                         try {
-                            connectionForPeerID(newPreferredNeighbor).sendActualMessage(MessageFactory.unchokeMessage());
+                            ClientConnection connection = connectionForPeerID(newPreferredNeighbor);
+                            if (connection != null) {
+                                connection.sendActualMessage(MessageFactory.unchokeMessage());
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -170,7 +179,10 @@ public class Peer implements ConnectionProvider, MessageHandler {
                     if (!nextPreferredNeighbors.contains(oldPreferredNeighbor)) {
                         //kicked out scenario
                         try {
-                            connectionForPeerID(oldPreferredNeighbor).sendActualMessage(MessageFactory.chokeMessage());
+                            ClientConnection connection = connectionForPeerID(oldPreferredNeighbor);
+                            if (connection != null) {
+                                connection.sendActualMessage(MessageFactory.chokeMessage());
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -196,7 +208,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
                     while (true) {
                         int randomIndex = random.nextInt(interested.size());
                         newOptimisticallyUnchokedNeighbor = interested.get(randomIndex);
-                        if (newOptimisticallyUnchokedNeighbor != optimisticallyUnchokedNeigbor &&
+                        if (newOptimisticallyUnchokedNeighbor != optimisticallyUnchokedNeighbor &&
                                 !preferredNeighbors.contains(newOptimisticallyUnchokedNeighbor))
                         {
                             // is NOT already unchoked as an optimisitically unchoked neighbor && is NOT already unchoked as a preferred neighbor
@@ -206,26 +218,32 @@ public class Peer implements ConnectionProvider, MessageHandler {
 
                     try {
                         // now that we know our friend, we let them know with an "unchoke"...
-                        connectionForPeerID(newOptimisticallyUnchokedNeighbor).sendActualMessage(MessageFactory.unchokeMessage());
+                        ClientConnection connection = connectionForPeerID(newOptimisticallyUnchokedNeighbor);
+                        if (connection != null) {
+                            connection.sendActualMessage(MessageFactory.unchokeMessage());
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 
                     // kick out our old friend and choke our old friend (unless they are currently ALSO selected as a preferred neighbor)...
-                    if (!preferredNeighbors.contains(optimisticallyUnchokedNeigbor)) {
+                    if (!preferredNeighbors.contains(optimisticallyUnchokedNeighbor)) {
                         try {
-                            connectionForPeerID(optimisticallyUnchokedNeigbor).sendActualMessage(MessageFactory.chokeMessage());
+                            ClientConnection connection = connectionForPeerID(optimisticallyUnchokedNeighbor);
+                            if (connection != null) {
+                                connection.sendActualMessage(MessageFactory.chokeMessage());
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }
 
                     // and replace our old friend with the new friend
-                    optimisticallyUnchokedNeigbor = newOptimisticallyUnchokedNeighbor;
+                    optimisticallyUnchokedNeighbor = newOptimisticallyUnchokedNeighbor;
 
                     try {
-                        logger.logChangeOptimisticallyUnchokedNeighbor(peerID, optimisticallyUnchokedNeigbor);
-                        System.out.println(optimisticallyUnchokedNeigbor);
+                        logger.logChangeOptimisticallyUnchokedNeighbor(peerID, optimisticallyUnchokedNeighbor);
+                        System.out.println(optimisticallyUnchokedNeighbor);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -235,6 +253,9 @@ public class Peer implements ConnectionProvider, MessageHandler {
     }
 
     public ClientConnection connectionForPeerID(int peerID) {
+        if(peerID == -1){
+            return null;
+        }
         if (!connections.containsKey(peerID)){
             startClientConnection(peerInfoConfigMap.get(peerID));
         }
@@ -313,7 +334,9 @@ public class Peer implements ConnectionProvider, MessageHandler {
         }
         if (actualMessage != null) {
             try {
-                connection.sendActualMessage(actualMessage);
+                if (connection != null) {
+                    connection.sendActualMessage(actualMessage);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -327,7 +350,9 @@ public class Peer implements ConnectionProvider, MessageHandler {
         ClientConnection connection = connectionForPeerID(message.getPeerID());
         ActualMessage actualMessage = MessageFactory.bitfieldMessage(bitField);
         try {
-            connection.sendActualMessage(actualMessage);
+            if (connection != null) {
+                connection.sendActualMessage(actualMessage);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -359,7 +384,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
     }
 
     public ActualMessage responseForRequest(ActualMessage message, int otherPeerID) {
-        if (!preferredNeighbors.contains(otherPeerID) && optimisticallyUnchokedNeigbor != otherPeerID) {
+        if (!preferredNeighbors.contains(otherPeerID) && optimisticallyUnchokedNeighbor != otherPeerID) {
             return null;
         }
         // Get the index from the payload of the message
