@@ -13,9 +13,7 @@ public class ClientConnection {
 
     private Socket clientSocket;
     private DataOutputStream out;
-    private DataInputStream in;
 
-    private int otherPeerID;
     private ConcurrentLinkedQueue<byte[]> outboundQueue;
 
     public ClientConnection(int peerID, MessageDispatcher dispatcher) {
@@ -25,12 +23,10 @@ public class ClientConnection {
     }
 
     public void openConnectionWithConfig(PeerInfoConfig peerInfoConfig) throws Exception {
-        otherPeerID = peerInfoConfig.getPeerID();
         clientSocket = new Socket(peerInfoConfig.getHostName(), peerInfoConfig.getListeningPort());
         try {
             out = new DataOutputStream(clientSocket.getOutputStream());
             out.flush();
-            in = new DataInputStream(clientSocket.getInputStream());
         } catch(Exception e) {
             e.printStackTrace();
         }

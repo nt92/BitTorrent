@@ -30,7 +30,11 @@ public class ActualMessage {
 
     public byte[] toBytes() throws Exception {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        stream.write(ByteBuffer.allocate(4).putInt(this.payload.length).array());
+        if (this.payload != null) {
+            stream.write(ByteBuffer.allocate(4).putInt(this.payload.length).array());
+        } else {
+            stream.write(ByteBuffer.allocate(4).putInt(0).array());
+        }
         stream.write(this.type.getValue());
         if (this.payload != null) {
             stream.write(this.payload, 0, this.payload.length);

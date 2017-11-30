@@ -10,11 +10,11 @@ public class MessageFactory {
     }
 
     static public ActualMessage chokeMessage() {
-        return new ActualMessage(MessageType.NOT_INTERESTED, null);
+        return new ActualMessage(MessageType.CHOKE, null);
     }
 
     static public ActualMessage unchokeMessage() {
-        return new ActualMessage(MessageType.NOT_INTERESTED, null);
+        return new ActualMessage(MessageType.UNCHOKE, null);
     }
 
     static public ActualMessage notInterestedMessage() {
