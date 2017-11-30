@@ -27,6 +27,7 @@ public class Peer implements MessageHandler {
     // Set of interested peers for the peer to send messages to
     private ArrayList<Integer> interested;
     private Map<Integer, Integer> peerDownloadRates;
+    private Map<Integer, Boolean> sentHandshakeTo;
 
     private CommonConfig commonConfig;
 
@@ -62,6 +63,7 @@ public class Peer implements MessageHandler {
         this.preferredNeighbors = new ArrayList<>(commonConfig.getNumberOfPreferredNeighbors());
         this.optimisticallyUnchokedNeighbor = -1;
         this.peerDownloadRates = new HashMap<>();
+        this.sentHandshakeTo = new HashMap<>();
 
         interested = new ArrayList<>();
         fileHandler = new FileHandler(peerID, commonConfig);
@@ -78,9 +80,19 @@ public class Peer implements MessageHandler {
 
         PeerInfoConfig currentPeerInfo = peerList.get(peerIndex);
 
-        // If the current peer has the file, we can set its bitfield
+        // Update the current peers initial bitfield, based on whether it has the file or not
+        bitField.set(0, numPieces, currentPeerInfo.getHasFile());
+        // Set all other bitfields to empty ones by default
+        for (int i = 0; i < peerList.size(); i++) {
+            int otherID = peerList.get(peerIndex).getPeerID();
+            if (otherID != peerID) {
+                otherPeerBitfields.put(otherID, new BitSet());
+            }
+        }
+
+
+        // If the current peer has the file, chunk it
         if (currentPeerInfo.getHasFile()) {
-            bitField.set(0, numPieces);
             fileHandler.chunkFile();
         }
 
@@ -248,10 +260,10 @@ public class Peer implements MessageHandler {
     }
 
     public ClientConnection connectionForPeerID(int peerID) {
-        if(peerID == -1){
+        if (peerID == -1) {
             return null;
         }
-        if (!connections.containsKey(peerID)){
+        if (!connections.containsKey(peerID)) {
             startClientConnection(peerInfoConfigMap.get(peerID));
         }
         return connections.get(peerID);
@@ -275,10 +287,11 @@ public class Peer implements MessageHandler {
         }).start();
     }
 
-    // Starts connection to another client in order to send the messages
+    // Starts connection to another client in order to send messages
     private void startClientConnection(PeerInfoConfig peerInfo) {
         ClientConnection clientConnection = new ClientConnection(peerID);
         connections.put(peerInfo.getPeerID(), clientConnection);
+        sentHandshakeTo.put(peerInfo.getPeerID(), true);
         new Thread(() -> {
             try {
                 clientConnection.openConnectionWithConfig(peerInfo);
@@ -298,6 +311,7 @@ public class Peer implements MessageHandler {
     // MessageHandler
 
     public void handleActualMessage(ActualMessage message, int otherPeerID) {
+        System.out.println(peerID + " received " + message.getType() + " from " + otherPeerID);
         ClientConnection connection = connectionForPeerID(otherPeerID);
         ActualMessage actualMessage;
         switch (message.getType()) {
@@ -340,10 +354,23 @@ public class Peer implements MessageHandler {
     }
 
     public void handleHandshakeMessage(HandshakeMessage message) {
+        ClientConnection connection = connectionForPeerID(message.getPeerID());
+
+        if (!sentHandshakeTo.containsKey(message.getPeerID())) {
+            HandshakeMessage handshakeMessage = new HandshakeMessage(peerID);
+            try {
+                if (connection != null) {
+                    connection.sendHandshakeMessage(handshakeMessage);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         if (bitField.isEmpty()) {
             return;
         }
-        ClientConnection connection = connectionForPeerID(message.getPeerID());
+
         ActualMessage actualMessage = MessageFactory.bitfieldMessage(bitField);
         try {
             if (connection != null) {
@@ -441,7 +468,8 @@ public class Peer implements MessageHandler {
         }
 
         // Record that we got the piece from the specific peer (for choosing who our best friend is)
-        peerDownloadRates.put(otherPeerID, peerDownloadRates.get(otherPeerID) + 1);
+
+        peerDownloadRates.put(otherPeerID, peerDownloadRates.containsKey(otherPeerID) ? peerDownloadRates.get(otherPeerID) + 1 : 1);
 
         // Now that piece was recieved, we request another piece from the server
         return requestPieceFrom(otherPeerID);
@@ -461,8 +489,7 @@ public class Peer implements MessageHandler {
         int pieceIndex = ByteBuffer.wrap(message.getPayload()).getInt();
         logger.logReceivedHaveMessage(peerID, otherPeerID, pieceIndex);
 
-        // Set the current peer to know that the other peer has this given bit
-        BitSet peerBitSet = otherPeerBitfields.get(otherPeerID);
+        BitSet peerBitSet = otherPeerBitfields.containsKey(otherPeerID) ? otherPeerBitfields.get(otherPeerID) : new BitSet();
         peerBitSet.set(pieceIndex);
         otherPeerBitfields.put(otherPeerID, peerBitSet);
 

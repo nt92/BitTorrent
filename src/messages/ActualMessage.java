@@ -17,7 +17,9 @@ public class ActualMessage {
         byte[] typeField = Arrays.copyOfRange(bytes, 0, 1);
         byte typeNum = ByteBuffer.wrap(typeField).get();
         this.type = MessageType.valueOf((int)typeNum);
-        this.payload = Arrays.copyOfRange(bytes, 1, bytes.length);
+        if (bytes.length > 1) {
+            this.payload = Arrays.copyOfRange(bytes, 1, bytes.length);
+        }
     }
 
     public MessageType getType() {
@@ -31,9 +33,9 @@ public class ActualMessage {
     public byte[] toBytes() throws Exception {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         if (this.payload != null) {
-            stream.write(ByteBuffer.allocate(4).putInt(this.payload.length).array());
+            stream.write(ByteBuffer.allocate(4).putInt(this.payload.length + 1).array());
         } else {
-            stream.write(ByteBuffer.allocate(4).putInt(0).array());
+            stream.write(ByteBuffer.allocate(4).putInt(1).array());
         }
         stream.write(this.type.getValue());
         if (this.payload != null) {

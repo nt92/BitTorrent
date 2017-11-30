@@ -8,14 +8,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ClientConnection {
     private int peerID;
-    private ConcurrentLinkedQueue<byte[]> outboundQueue;
+    private ConcurrentLinkedQueue<HandshakeMessage> handshakeQueue;
+    private ConcurrentLinkedQueue<ActualMessage> messageQueue;
 
     private Socket socket;
     private DataOutputStream out;
 
     public ClientConnection(int peerID) {
         this.peerID = peerID;
-        this.outboundQueue = new ConcurrentLinkedQueue<>();
+        this.handshakeQueue = new ConcurrentLinkedQueue<>();
+        this.messageQueue = new ConcurrentLinkedQueue<>();
     }
 
     public void openConnectionWithConfig(PeerInfoConfig peerInfoConfig) throws Exception {
@@ -28,12 +30,24 @@ public class ClientConnection {
         }
 
         HandshakeMessage handshakeMessage = new HandshakeMessage(peerID);
-        outboundQueue.add(handshakeMessage.toBytes());
+        handshakeQueue.add(handshakeMessage);
 
         while (true) {
-            // Take care of messages in outboundQueue
-            while (!outboundQueue.isEmpty()) {
-                byte[] outBytes = outboundQueue.poll();
+            while (!handshakeQueue.isEmpty()) {
+                //System.out.println(peerID + " is sending handshake to " + peerInfoConfig.getPeerID());
+                byte[] outBytes = handshakeQueue.poll().toBytes();
+                try {
+                    out.write(outBytes);
+                    out.flush();
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            while (!messageQueue.isEmpty()) {
+                ActualMessage message = messageQueue.poll();
+                System.out.println(peerID + " is sending " + message.getType() + " to " + peerInfoConfig.getPeerID());
+                byte[] outBytes = message.toBytes();
                 try {
                     out.write(outBytes);
                     out.flush();
@@ -44,8 +58,13 @@ public class ClientConnection {
         }
     }
 
+
+    public void sendHandshakeMessage(HandshakeMessage message) throws Exception {
+        handshakeQueue.add(message);
+    }
+
     public void sendActualMessage(ActualMessage message) throws Exception {
-        outboundQueue.add(message.toBytes());
+        messageQueue.add(message);
     }
 
     public void closeConnection() throws Exception {
