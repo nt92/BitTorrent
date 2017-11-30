@@ -1,16 +1,15 @@
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
 import files.FileHandler;
-import messages.MessageDispatcher;
+import messages.*;
 import networking.ClientConnection;
 import networking.ConnectionProvider;
-import networking.PeerInfoProvider;
 import networking.ServerConnection;
 import util.MapUtil;
 
 import java.util.*;
 
-public class Peer implements ConnectionProvider, PeerInfoProvider {
+public class Peer implements ConnectionProvider, MessageHandler {
     private int peerID;
     private BitSet bitField;
     private int numPieces;
@@ -220,6 +219,13 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
         }, 0, 1000 * commonConfig.getOptimisticUnchokingInterval());
     }
 
+    public ClientConnection connectionForPeerID(int peerID) {
+        if (!connections.containsKey(peerID)){
+            startClientConnection(peerInfoConfigMap.get(peerID));
+        }
+        return connections.get(peerID);
+    }
+
     // Starts server in order to receive messages
     private void startServer(int serverPort) {
         ServerConnection serverConnection = new ServerConnection(messageDispatcher);
@@ -257,43 +263,54 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
         }).start();
     }
 
-    // ConnectionProvider
 
-    @Override
-    public ClientConnection connectionForPeerID(int peerID) {
-        if (!connections.containsKey(peerID)){
-            startClientConnection(peerInfoConfigMap.get(peerID));
+    public void handleActualMessage(ActualMessage message, int otherPeerID) {
+        ClientConnection connection = connectionForPeerID(otherPeerID);
+        ActualMessage actualMessage;
+        switch (message.getType()) {
+            case BITFIELD:
+                BitSet otherBitfield = BitSet.valueOf(message.getPayload());
+                List missingPieces = fileHandler.getMissingPieces(bitField, otherBitfield);
+                if (missingPieces.isEmpty()) {
+                    actualMessage = MessageFactory.notInterestedMessage();
+                } else {
+                    actualMessage = MessageFactory.interestedMessage();
+                }
+                break;
+            case INTERESTED:
+                actualMessage = serverMessageHandler.serverResponseForInterested(inMessage, clientPeerID);
+                break;
+            case NOT_INTERESTED:
+                actualMessage = serverMessageHandler.serverResponseForUninterested(inMessage, clientPeerID);
+                break;
+            case REQUEST:
+                actualMessage = serverMessageHandler.serverResponseForRequest(inMessage, clientPeerID);
+                break;
+            default:
+                actualMessage = null;
         }
-        return connections.get(peerID);
+        if (actualMessage != null) {
+            try {
+                connection.sendActualMessage(actualMessage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    // PeerInfoProvider
-
-    @Override
-    public BitSet currentBitfield() {
-        return bitField;
+    public void handleHandshakeMessage(HandshakeMessage message) {
+        ClientConnection connection = connectionForPeerID(message.getPeerID());
+        ActualMessage actualMessage = MessageFactory.bitfieldMessage(bitField);
+        try {
+            connection.sendActualMessage(actualMessage);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
 
     /*
     // ServerMessageHandler
-
-    @Override
-    public Message serverResponseForHandshake(Message message, Consumer<Integer> clientPeerIDConsumer) throws Exception {
-        // Downcasting message to handshake to get peerID
-        int clientPeerID = ((HandshakeMessage)message).getPeerID();
-
-        // Modify client peerID based on the consumer of the server
-        clientPeerIDConsumer.accept(clientPeerID);
-
-        Logger.logConnectionReceived(peerID, clientPeerID);
-
-        if (!connections.containsKey(clientPeerID)){
-            startClientConnection(peerInfoConfigMap.get(clientPeerID));
-        }
-
-        // Creates a message using MessageType using peerID as the payload
-        return MessageType.HANDSHAKE.createMessageWithPayload(ByteBuffer.allocate(4).putInt(peerID).array());
-    }
 
     @Override
     public Message serverResponseForBitfield(Message message, int clientPeerID) throws Exception {

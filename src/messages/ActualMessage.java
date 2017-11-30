@@ -8,7 +8,7 @@ public class ActualMessage {
     private MessageType type;
     private byte[] payload;
 
-    public ActualMessage(MessageType type, byte[] payload) {
+    ActualMessage(MessageType type, byte[] payload) {
         this.type = type;
         this.payload = payload;
     }
@@ -32,7 +32,9 @@ public class ActualMessage {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         stream.write(ByteBuffer.allocate(4).putInt(this.payload.length).array());
         stream.write(this.type.getValue());
-        stream.write(this.payload, 0, this.payload.length);
+        if (this.payload != null) {
+            stream.write(this.payload, 0, this.payload.length);
+        }
         return stream.toByteArray();
     }
 
