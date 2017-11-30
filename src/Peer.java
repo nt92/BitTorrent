@@ -78,16 +78,12 @@ public class Peer implements ConnectionProvider, MessageHandler {
             peerIndex++;
         }
 
-        System.out.println("Starting " + peerID);
-
-
         PeerInfoConfig currentPeerInfo = peerList.get(peerIndex);
 
         // If the current peer has the file, we can set its bitfield
         if (currentPeerInfo.getHasFile()) {
             bitField.set(0, numPieces);
             fileHandler.chunkFile();
-            System.out.println(peerID + " Has the Complete File");
         }
 
         // Start the server in order to being receiving messages
@@ -107,7 +103,6 @@ public class Peer implements ConnectionProvider, MessageHandler {
             Thread.sleep(1000);
         }
 
-        System.out.println("CONNECTIONS from " + peerID + " are " + connections);
         // Timer methods that run on the unchoking and optimistically unchoking intervals utilizing TimerTask
         getPreferredPeers();
         getOptimisticallyUnchokedPeer();
@@ -190,6 +185,9 @@ public class Peer implements ConnectionProvider, MessageHandler {
                 }
 
                 preferredNeighbors = nextPreferredNeighbors;
+                if (preferredNeighbors.isEmpty()) {
+                    logger.logChangedPreferredNeighbors(peerID, previousPreferredNeighbors.toArray());
+                }
 
             }
         }, 0, 1000 * commonConfig.getUnchokingInterval());
@@ -243,7 +241,6 @@ public class Peer implements ConnectionProvider, MessageHandler {
 
                     try {
                         logger.logChangeOptimisticallyUnchokedNeighbor(peerID, optimisticallyUnchokedNeighbor);
-                        System.out.println(optimisticallyUnchokedNeighbor);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -264,7 +261,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
 
     // Starts server in order to receive messages
     private void startServer(int serverPort) {
-        ServerConnection serverConnection = new ServerConnection(messageDispatcher);
+        ServerConnection serverConnection = new ServerConnection(peerID, logger, messageDispatcher);
         new Thread(() -> {
             try {
                 serverConnection.openPort(serverPort);
@@ -297,11 +294,13 @@ public class Peer implements ConnectionProvider, MessageHandler {
                 }
             }
         }).start();
+        logger.logConnectionMade(peerID, peerInfo.getPeerID());
     }
 
     // MessageHandler
 
     public void handleActualMessage(ActualMessage message, int otherPeerID) {
+        System.out.println(message.getType() + " from " + otherPeerID + " to " + peerID);
         ClientConnection connection = connectionForPeerID(otherPeerID);
         ActualMessage actualMessage;
         switch (message.getType()) {

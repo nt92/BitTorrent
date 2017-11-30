@@ -34,6 +34,9 @@ public class Logger {
         try {
             String finalString = dateFormat.format(new Date()).concat(": " + string);
             outputStream.write(finalString.getBytes("ASCII"));
+//            if (peerID == 1001) {
+//                System.out.println(finalString);
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -47,10 +50,10 @@ public class Logger {
         append("Peer " + peerID + " is connected from Peer " + otherPeerID + "\n");
     }
 
-    public void logChangedPreferredNeighbors(int peerID, int[] neighbors) {
+    public void logChangedPreferredNeighbors(int peerID, Object[] neighbors) {
         StringBuilder builder = new StringBuilder();
         String sep = "";
-        for (int id : neighbors) {
+        for (Object id : neighbors) {
             builder.append(sep);
             builder.append(id);
             sep = ",";
