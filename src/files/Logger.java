@@ -21,9 +21,10 @@ public class Logger {
         if(!file.getParentFile().exists()){
             file.getParentFile().mkdirs();
         }
-        if(!file.exists()){
-            file.createNewFile();
+        if(file.exists()){
+            file.delete();
         }
+        file.createNewFile();
         outputStream = new FileOutputStream(file);
     }
 

@@ -103,11 +103,11 @@ public class Peer implements ConnectionProvider, MessageHandler {
             this.peerInfoConfigMap.put(peerInfoConfig.getPeerID(), peerInfoConfig);
         }
 
-        while (connections.size() < peerList.size() - 1) {
+        while (connections.size() < peerIndex) {
             Thread.sleep(1000);
         }
 
-        System.out.println("CONNECTIONS to " + peerID + " are " + connections);
+        System.out.println("CONNECTIONS from " + peerID + " are " + connections);
         // Timer methods that run on the unchoking and optimistically unchoking intervals utilizing TimerTask
         getPreferredPeers();
         getOptimisticallyUnchokedPeer();
