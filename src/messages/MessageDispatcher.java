@@ -14,7 +14,7 @@ public class MessageDispatcher {
         this.infoProvider = infoProvider;
     }
 
-    public void dispatchMessage(ActualMessage message) {
+    public void dispatchMessage(ActualMessage message, int otherPeerID) {
         //ClientConnection connection = connectionProvider.connectionForPeerID(senderPeerID);
         /*
         Message outMessage;
