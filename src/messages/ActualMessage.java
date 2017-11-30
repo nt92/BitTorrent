@@ -1,12 +1,48 @@
 package messages;
 
-public class ActualMessage extends Message{
+import java.util.Arrays;
+import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
 
-    // Wrapper for ActualMessage so that we can use them under the same umbrella as Message
-    public ActualMessage(byte[] data, MessageType type) throws Exception {
-        super(data, type);
-        if (type == MessageType.HANDSHAKE) {
-            throw new Exception("Incorrect message type: can't construct an ActualMessage with MessageType HANDSHAKE.");
+public class ActualMessage {
+    private MessageType type;
+    private byte[] payload;
+
+    public ActualMessage(MessageType type, byte[] payload) {
+        this.type = type;
+        this.payload = payload;
+    }
+
+    public ActualMessage(byte[] bytes) {
+        byte[] typeField = Arrays.copyOfRange(bytes, 0, 1);
+        byte typeNum = ByteBuffer.wrap(typeField).get();
+        this.type = MessageType.valueOf((int)typeNum);
+        this.payload = Arrays.copyOfRange(bytes, 1, bytes.length);
+    }
+
+    public MessageType getType() {
+        return this.type;
+    }
+
+    public byte[] getPayload() {
+        return this.payload;
+    }
+
+    public byte[] toBytes() throws Exception {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        stream.write(ByteBuffer.allocate(4).putInt(this.payload.length).array());
+        stream.write(this.type.getValue());
+        stream.write(this.payload, 0, this.payload.length);
+        return stream.toByteArray();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (o instanceof ActualMessage) {
+            ActualMessage other = (ActualMessage)o;
+            return this.type == other.type && Arrays.equals(this.payload, other.payload);
         }
+        return false;
     }
 }
