@@ -51,6 +51,14 @@ public class ClientConnection {
             }
         }
     }
+//    //sending message to certain client
+//    public void sendMessageTo(String message){
+//        // TODO: Send message to requested client
+//    }
+//
+//    public void sendMessageTo(ActualMessage message){
+//        // TODO: Send message to requested client
+//    }
 
     public void sendActualMessage(ActualMessage message) throws Exception {
         outboundQueue.add(message.toBytes());

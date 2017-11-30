@@ -51,12 +51,12 @@ public class Logger {
 
     public static void logConnectionMade(int peerID, int otherPeerID) throws Exception {
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " makes a connection to Peer " + otherPeerID);
+        logger.append("Peer " + peerID + " makes a connection to Peer " + otherPeerID + "\n");
     }
 
     public static void logConnectionReceived(int peerID, int otherPeerID) throws Exception {
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " is connected from Peer " + otherPeerID);
+        logger.append("Peer " + peerID + " is connected from Peer " + otherPeerID + "\n");
     }
 
     public static void logChangedPreferredNeighbors(int peerID, int[] neighbors) throws Exception {
@@ -68,17 +68,17 @@ public class Logger {
             sep = ",";
         }
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " has the preferred neighbors " + builder.toString());
+        logger.append("Peer " + peerID + " has the preferred neighbors " + builder.toString() + "\n");
     }
 
     public static void logChangeOptimisticallyUnchokedNeighbor(int peerID, int otherID) throws Exception {
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " has the optimistically unchoked neighbor " + otherID);
+        logger.append("Peer " + peerID + " has the optimistically unchoked neighbor " + otherID + "\n");
     }
 
-    public static void logUnchoking(int peerID, int otherID) throws Exception {
+    public static void logUnchoking(int peerID, Integer otherID) throws Exception {
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " is unchoked by " + otherID);
+        logger.append("Peer " + peerID + " is unchoked by " + otherID + "\n");
     }
 
     public static void logChoking(int peerID, int otherID) throws Exception {
@@ -88,21 +88,21 @@ public class Logger {
 
     public static void logReceivedHaveMessage(int peerID, int otherID, int pieceIndex) throws Exception {
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " received the 'have' message from " + otherID + " for the piece " + pieceIndex);
+        logger.append("Peer " + peerID + " received the 'have' message from " + otherID + " for the piece " + pieceIndex + "\n");
     }
 
     public static void logReceivedInterestedMessage(int peerID, int otherID) throws Exception {
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " received the 'interested' message from " + otherID);
+        logger.append("Peer " + peerID + " received the 'interested' message from " + otherID + "\n");
     }
 
     public static void logPieceDownloaded(int peerID, int otherID, int pieceIndex, int totalPieces) throws Exception {
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " has downloaded the piece " + pieceIndex + " from " + otherID + ". Now the number of pieces it has it " + totalPieces + ".");
+        logger.append("Peer " + peerID + " has downloaded the piece " + pieceIndex + " from " + otherID + ". Now the number of pieces it has it " + totalPieces + "."  + "\n");
     }
 
     public static void logCompleteFileDownloaded(int peerID) throws Exception {
         Logger logger = getInstance(peerID);
-        logger.append("Peer " + peerID + " has downloaded the complete file.");
+        logger.append("Peer " + peerID + " has downloaded the complete file."  + "\n");
     }
 }

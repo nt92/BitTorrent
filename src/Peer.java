@@ -6,6 +6,7 @@ import networking.ClientConnection;
 import networking.ConnectionProvider;
 import networking.PeerInfoProvider;
 import networking.ServerConnection;
+import util.MapUtil;
 
 import java.util.*;
 
@@ -24,9 +25,15 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
     private Map<Integer, BitSet> otherPeerBitfields;
 
     // Set of interested peers for the peer to send messages to
-    private Set<Integer> interested;
+    private ArrayList<Integer> interested;
+    private Map<Integer, Integer> peerDownloadRates;
 
     private CommonConfig commonConfig;
+
+    private ArrayList<Integer> preferredNeighbors;
+    Integer optimisticallyUnchokedNeigbor;
+
+    private ServerConnection serverConnection;
 
     // Holds the data for the actual file
     private FileHandler fileHandler;
@@ -48,7 +55,12 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
         this.connections = new HashMap<>();
         this.otherPeerBitfields = new HashMap<>();
 
-        interested = new HashSet<>();
+        //set the size of preferred neighbors
+        this.preferredNeighbors = new ArrayList<>(commonConfig.getNumberOfPreferredNeighbors());
+        this.optimisticallyUnchokedNeigbor = -1;
+        this.peerDownloadRates = new HashMap<>();
+
+        interested = new ArrayList<>();
         fileHandler = new FileHandler(peerID, commonConfig);
         messageDispatcher = new MessageDispatcher(this, this);
     }
@@ -60,13 +72,16 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
             peerIndex++;
         }
 
+        System.out.println("Starting " + peerID);
+
+
         PeerInfoConfig currentPeerInfo = peerList.get(peerIndex);
 
         // If the current peer has the file, we can set its bitfield
         if (currentPeerInfo.getHasFile()) {
             bitField.set(0, numPieces);
-
-            // TODO: Load file from file path into memory for the peer
+            fileHandler.chunkFile();
+            System.out.println(peerID + " Has the Complete File");
         }
 
         // Start the server in order to being receiving messages
@@ -92,7 +107,73 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
         getPreferredPeersTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // TODO: Implement logic for getting preferred peers once
+
+                ArrayList<Integer> previousPreferredNeighbors = new ArrayList<Integer>();
+                ArrayList<Integer> nextPreferredNeighbors = new ArrayList<Integer>();
+                // If we have the whole file, WE SHARE! Select random peeps from interested as preferred
+                if(fileHandler.hasAllPieces()){
+                    preferredNeighbors.clear();
+                    if(interested.size() > 0) {
+                        while(true) {
+                            //get random interested value
+                            Integer newPreferredNeighbor;
+                            int randomIndex = new Random().nextInt(interested.size());
+                            newPreferredNeighbor = interested.get(randomIndex);
+
+                            //check if it was already added to nextPreferredNeighbors
+                            if(!nextPreferredNeighbors.contains(newPreferredNeighbor)){
+                                nextPreferredNeighbors.add(newPreferredNeighbor);
+                            }
+
+                            if(nextPreferredNeighbors.size() >= commonConfig.getNumberOfPreferredNeighbors()) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                // if NOT, find preferred neighbors based on fastest unchoking speeds (how fast you gave me data when I requested it)
+                else {
+                    // TODO: find preferredNeighbors.size amount of fastest unchokers
+                    if(!peerDownloadRates.isEmpty()) {
+                        peerDownloadRates = MapUtil.sortByValue(peerDownloadRates);
+                        for(Map.Entry<Integer, Integer> entry: peerDownloadRates.entrySet()){
+                            nextPreferredNeighbors.add(entry.getKey());
+
+                            if(nextPreferredNeighbors.size() >= commonConfig.getNumberOfPreferredNeighbors()) {
+                                break;
+                            }
+                        }
+                        peerDownloadRates.clear();
+                    }
+                }
+
+                //now, we CHANGE our neighbors list and let them know we chose them
+                    //(+) if they are a veteran, we don't tell them anything. They know what to do.
+                    //(+) if they are a newcomer, we send them the "unchoke" message.
+                    //(-) if they are kicked out the neighborhood, we let them know with a "choke" message
+
+                for(Integer newPreferredNeighbor : nextPreferredNeighbors){
+                    if(preferredNeighbors.contains(newPreferredNeighbor)){
+                        //veteran case
+                        continue;
+                    } else {
+                        //newcomer case
+                        serverConnection.sendMessageTo(newPreferredNeighbor, "unchoke");
+                    }
+                }
+
+                for(Integer oldPreferredNeighbor : previousPreferredNeighbors){
+                    if(!nextPreferredNeighbors.contains(oldPreferredNeighbor)){
+                        //kicked out scenario
+                        serverConnection.sendMessageTo(oldPreferredNeighbor, "choke");
+                    }
+                }
+
+                preferredNeighbors = nextPreferredNeighbors;
+                if(preferredNeighbors.size() != 0){
+                    System.out.println(peerID + " loves " + preferredNeighbors);
+                }
+
             }
         }, 0, 1000 * commonConfig.getUnchokingInterval());
     }
@@ -102,7 +183,39 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
         getOptimisticallyUnchokedPeerTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // TODO: Implement logic for optimistically unchoking a peer once
+                // in selecting the next Optimistically Unchocked, they have to
+                    // - not be already unchoked (aka preferred neighbor or current OptimiUnchocked
+                    // - be interested
+                Integer newOptimisticallyUnchokedNeighbor;
+                if(interested.size() > 0){
+                    while(true){
+                        int randomIndex = new Random().nextInt(interested.size());
+                        newOptimisticallyUnchokedNeighbor = interested.get(randomIndex);
+                        if(newOptimisticallyUnchokedNeighbor != optimisticallyUnchokedNeigbor && !preferredNeighbors.contains(newOptimisticallyUnchokedNeighbor))
+                            //is NOT already unchoked as an optimisitically unchoked neighbor && is NOT already unchoked as a preferred neighbor
+                            break;
+                    }
+
+                    // now that we know our friend, we let them know with an "unchoke"...
+                    serverConnection.sendMessageTo(newOptimisticallyUnchokedNeighbor, "unchoke");
+                    // kick out our old friend and choke our old friend (unless they are currently ALSO selected as a preferred neighbor)...
+                    if(!preferredNeighbors.contains(optimisticallyUnchokedNeigbor)){
+                        serverConnection.sendMessageTo(optimisticallyUnchokedNeigbor, "choke");
+                    }
+
+                    // and replace our old friend with the new friend
+                    optimisticallyUnchokedNeigbor = newOptimisticallyUnchokedNeighbor;
+
+                    try {
+//                        Logger.logChangeOptimisticallyUnchokedNeighbor(peerID, optimisticallyUnchokedNeigbor);
+                        System.out.println(optimisticallyUnchokedNeigbor);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+
+
             }
         }, 0, 1000 * commonConfig.getOptimisticUnchokingInterval());
     }
@@ -259,7 +372,7 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
 
     @Override
     public Message clientResponseForBitfield(Message message, int serverPeerID) throws Exception {
-        // TODO: Log bitfield
+        // TODO: Log bitfieldx
 
         // Get the bitset from the payload of the message and then get the missing bits from the file
         BitSet serverBitSet = BitSet.valueOf(message.getPayload());
@@ -281,24 +394,61 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
     @Override
     public Message clientResponseForChoke(Message message, int serverPeerID) throws Exception {
         Logger.logChoking(peerID, serverPeerID);
-
-        // Return null message and don't do anything else
         return null;
     }
 
     @Override
     public Message clientResponseForUnchoke(Message message, int serverPeerID) throws Exception {
         Logger.logUnchoking(peerID, serverPeerID);
+        return requestPieceFrom(serverPeerID);
+    }
 
+    @Override
+    public Message clientResponseForPiece(Message message, int serverPeerID) throws Exception {
+        // Get the piece index through payload of 0-4 being index and the rest being the actual piece
+        byte[] pieceIndexBytes = Arrays.copyOfRange(message.getPayload(), 0, 4);
+        int pieceIndex = ByteBuffer.wrap(pieceIndexBytes).getInt();
+        byte[] pieceBytes = Arrays.copyOfRange(message.getPayload(), 4, message.getPayload().length);
+        // If file/piece is already in the current peer, don't do anything
+        if(fileHandler.hasPiece(pieceIndex)){
+            return null;
+        }
+        fileHandler.setPiece(pieceIndex, pieceBytes);
+        Logger.logPieceDownloaded(peerID, serverPeerID, pieceIndex, numPieces);
+
+        // Update all peers that current peer has new piece
+        for(Integer peerID : connections.keySet()){
+            connections.get(peerID).sendMessageTo("HAVE");
+        }
+
+        // If the file is completed, save the FileHandler pieces to disk and send out NOT_INTERESTED
+        if(fileHandler.hasAllPieces()){
+            fileHandler.aggregateAllPieces();
+            Logger.logCompleteFileDownloaded(peerID);
+            // TODO: Send NOT_INTERESTED to all peers
+            for(Integer peerID : connections.keySet()){
+                connections.get(peerID).sendMessageTo("NOT_INTERESTED");
+            }
+            return MessageType.NOT_INTERESTED.createMessageWithPayload(new byte[] {});
+        }
+
+        // record that we got the piece from the specific peer (for choosing who our best friend is)
+        peerDownloadRates.put(serverPeerID, peerDownloadRates.get(serverPeerID) + 1);
+
+        //Now that piece was recieved, we request another piece from the server
+        return requestPieceFrom(serverPeerID);
+    }
+
+    private Message requestPieceFrom(int serverPeerID) throws Exception{
         // Get a random missing piece from the file given the two bitsets
         int randMissingPieceIndex = fileHandler.getRandomMissingPiece(bitField, otherPeerBitfields.get(serverPeerID));
 
         // If we are missing anything, send a request message
         if (randMissingPieceIndex >= 0) {
             byte[] requestPayload = ByteBuffer.allocate(4).putInt(randMissingPieceIndex).array();
+//            connections.get(serverPeerID).sendMessageTo(MessageType.REQUEST.createMessageWithPayload(requestPayload));
             return MessageType.REQUEST.createMessageWithPayload(requestPayload);
         }
-
         return null;
     }
 
@@ -320,26 +470,5 @@ public class Peer implements ConnectionProvider, PeerInfoProvider {
 
         return null;
     }
-
-    @Override
-    public Message clientResponseForPiece(Message message, int serverPeerID) throws Exception {
-        // TODO: If file/piece is already in the current peer don't do anything
-
-        // Get the piece index through payload of 0-4 being index and the rest being the actual piece
-        byte[] pieceIndexBytes = Arrays.copyOfRange(message.getPayload(), 0, 4);
-        int pieceIndex = ByteBuffer.wrap(pieceIndexBytes).getInt();
-        byte[] pieceBytes = Arrays.copyOfRange(message.getPayload(), 4, message.getPayload().length);
-
-        Logger.logPieceDownloaded(peerID, serverPeerID, pieceIndex, numPieces);
-
-        // TODO: If peer does not currently have the piece, update the file and the bitset
-
-        // After this, we need to check and see if the file is finished. If so we write the file to actual memory
-        // with the file chunker. Then we send a NOT_INTERESTED message to all peers.
-        // If the file is not finished, get the next missing piece from the other peer's bitset and request a message
-        // Finally, update all the peers that the current peer has the given piece
-
-        return null;
-    }
-    */
+*/
 }

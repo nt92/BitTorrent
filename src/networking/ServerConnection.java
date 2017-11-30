@@ -34,6 +34,11 @@ public class ServerConnection {
         serverSocket.close();
     }
 
+    //sending message to certain client
+    public void sendMessageTo(Integer clientID, String message){
+        // TODO: Send message to requested client
+    }
+
     // A thread that handles responding to a single message
     private static class RequestHandlerThread extends Thread {
         private Socket socket;
