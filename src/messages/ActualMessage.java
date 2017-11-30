@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.nio.ByteBuffer;
 import java.io.ByteArrayOutputStream;
 
-public class ActualMessage implements Message {
+public class ActualMessage {
     private MessageType type;
     private byte[] payload;
 

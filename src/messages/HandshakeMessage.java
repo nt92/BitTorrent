@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class HandshakeMessage implements Message {
+public class HandshakeMessage {
     private int peerID;
 
     public HandshakeMessage(int peerID) {

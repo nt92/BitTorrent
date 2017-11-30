@@ -1,6 +1,5 @@
 package messages;
 
-import messages.ActualMessage;
 import networking.ClientConnection;
 import networking.ConnectionProvider;
 import networking.PeerInfoProvider;
@@ -15,7 +14,7 @@ public class MessageDispatcher {
         this.infoProvider = infoProvider;
     }
 
-    public ActualMessage dispatchMessage(ActualMessage message, int senderPeerID) {
+    public void dispatchMessage(ActualMessage message, int senderPeerID) {
         ClientConnection connection = connectionProvider.connectionForPeerID(senderPeerID);
         /*
         Message outMessage;

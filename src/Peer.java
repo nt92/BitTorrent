@@ -1,21 +1,15 @@
 import configs.CommonConfig;
 import configs.PeerInfoConfig;
-
-import files.Logger;
 import files.FileHandler;
-
-import messages.*;
-
+import messages.MessageDispatcher;
 import networking.ClientConnection;
 import networking.ConnectionProvider;
 import networking.PeerInfoProvider;
 import networking.ServerConnection;
 
-import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.function.Consumer;
 
-public class Peer implements ClientMessageHandler, ServerMessageHandler, ConnectionProvider, PeerInfoProvider {
+public class Peer implements ConnectionProvider, PeerInfoProvider {
     private int peerID;
     private BitSet bitField;
     private int numPieces;
@@ -56,6 +50,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler, Connect
 
         interested = new HashSet<>();
         fileHandler = new FileHandler(peerID, commonConfig);
+        messageDispatcher = new MessageDispatcher(this, this);
     }
 
     public void start(List<PeerInfoConfig> peerList) throws Exception {
@@ -166,6 +161,7 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler, Connect
         return bitField;
     }
 
+    /*
     // ServerMessageHandler
 
     @Override
@@ -345,4 +341,5 @@ public class Peer implements ClientMessageHandler, ServerMessageHandler, Connect
 
         return null;
     }
+    */
 }
