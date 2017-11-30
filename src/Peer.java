@@ -82,6 +82,15 @@ public class Peer implements MessageHandler {
 
         // Update the current peers initial bitfield, based on whether it has the file or not
         bitField.set(0, numPieces, currentPeerInfo.getHasFile());
+        // Set all other bitfields to empty ones by default
+        for (int i = 0; i < peerList.size(); i++) {
+            int otherID = peerList.get(peerIndex).getPeerID();
+            if (otherID != peerID) {
+                otherPeerBitfields.put(otherID, new BitSet());
+            }
+        }
+
+
         // If the current peer has the file, chunk it
         if (currentPeerInfo.getHasFile()) {
             fileHandler.chunkFile();
@@ -251,10 +260,10 @@ public class Peer implements MessageHandler {
     }
 
     public ClientConnection connectionForPeerID(int peerID) {
-        if(peerID == -1){
+        if (peerID == -1) {
             return null;
         }
-        if (!connections.containsKey(peerID)){
+        if (!connections.containsKey(peerID)) {
             startClientConnection(peerInfoConfigMap.get(peerID));
         }
         return connections.get(peerID);
@@ -459,7 +468,8 @@ public class Peer implements MessageHandler {
         }
 
         // Record that we got the piece from the specific peer (for choosing who our best friend is)
-        peerDownloadRates.put(otherPeerID, peerDownloadRates.get(otherPeerID) + 1);
+
+        peerDownloadRates.put(otherPeerID, peerDownloadRates.containsKey(otherPeerID) ? peerDownloadRates.get(otherPeerID) + 1 : 1);
 
         // Now that piece was recieved, we request another piece from the server
         return requestPieceFrom(otherPeerID);
@@ -479,8 +489,7 @@ public class Peer implements MessageHandler {
         int pieceIndex = ByteBuffer.wrap(message.getPayload()).getInt();
         logger.logReceivedHaveMessage(peerID, otherPeerID, pieceIndex);
 
-        // Set the current peer to know that the other peer has this given bit
-        BitSet peerBitSet = otherPeerBitfields.get(otherPeerID);
+        BitSet peerBitSet = otherPeerBitfields.containsKey(otherPeerID) ? otherPeerBitfields.get(otherPeerID) : new BitSet();
         peerBitSet.set(pieceIndex);
         otherPeerBitfields.put(otherPeerID, peerBitSet);
 
