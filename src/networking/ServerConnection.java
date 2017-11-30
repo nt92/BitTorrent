@@ -45,6 +45,7 @@ public class ServerConnection {
         private DataInputStream in;
         private MessageDispatcher dispatcher;
         private Thread listenerThread;
+        private int otherPeerID = -1;
 
         private ConcurrentLinkedQueue<HandshakeMessage> handshakeQueue;
         private ConcurrentLinkedQueue<ActualMessage> messageQueue;
@@ -92,6 +93,7 @@ public class ServerConnection {
                     } finally {
                         try {
                             HandshakeMessage handshakeMessage = new HandshakeMessage(bytes);
+                            otherPeerID = handshakeMessage.getPeerID();
                             handshakeQueue.add(handshakeMessage);
                         } catch (Exception e1) {
                             try {
@@ -114,7 +116,7 @@ public class ServerConnection {
 
             while (!messageQueue.isEmpty()) {
                 ActualMessage message = messageQueue.poll();
-                dispatcher.dispatchMessage(message);
+                dispatcher.dispatchMessage(message, otherPeerID);
             }
 
         }
