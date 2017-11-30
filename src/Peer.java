@@ -42,6 +42,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
     // Handles incoming messages
     private MessageDispatcher messageDispatcher;
 
+    private Logger logger;
     private Random random = new Random();
 
     public Peer(int peerID, CommonConfig commonConfig) throws Exception {
@@ -66,6 +67,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
         interested = new ArrayList<>();
         fileHandler = new FileHandler(peerID, commonConfig);
         messageDispatcher = new MessageDispatcher(this);
+        logger = new Logger(peerID);
     }
 
     public void start(List<PeerInfoConfig> peerList) throws Exception {
@@ -222,7 +224,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
                     optimisticallyUnchokedNeigbor = newOptimisticallyUnchokedNeighbor;
 
                     try {
-                        Logger.logChangeOptimisticallyUnchokedNeighbor(peerID, optimisticallyUnchokedNeigbor);
+                        logger.logChangeOptimisticallyUnchokedNeighbor(peerID, optimisticallyUnchokedNeigbor);
                         System.out.println(optimisticallyUnchokedNeigbor);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -345,13 +347,13 @@ public class Peer implements ConnectionProvider, MessageHandler {
     }
 
     public ActualMessage responseForInterested(ActualMessage message, int otherPeerID) {
-        Logger.logReceivedInterestedMessage(peerID, otherPeerID);
+        logger.logReceivedInterestedMessage(peerID, otherPeerID);
         interested.add(otherPeerID);
         return null;
     }
 
     public ActualMessage serverResponseForUninterested(ActualMessage message, int otherPeerID) {
-        Logger.logReceivedNotInterestedMessage(peerID, otherPeerID);
+        logger.logReceivedNotInterestedMessage(peerID, otherPeerID);
         interested.remove(otherPeerID);
         return null;
     }
@@ -369,12 +371,12 @@ public class Peer implements ConnectionProvider, MessageHandler {
     }
 
     public ActualMessage responseForChoke(ActualMessage message, int otherPeerID) {
-        Logger.logChoking(peerID, otherPeerID);
+        logger.logChoking(peerID, otherPeerID);
         return null;
     }
 
     public ActualMessage responseForUnchoke(ActualMessage message, int otherPeerID) {
-        Logger.logUnchoking(peerID, otherPeerID);
+        logger.logUnchoking(peerID, otherPeerID);
         return requestPieceFrom(otherPeerID);
     }
 
@@ -391,7 +393,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
         }
 
         fileHandler.setPiece(pieceIndex, pieceBytes);
-        Logger.logPieceDownloaded(peerID, otherPeerID, pieceIndex, numPieces);
+        logger.logPieceDownloaded(peerID, otherPeerID, pieceIndex, numPieces);
 
         // Update all peers that current peer has new piece
         for (Integer peerID : connections.keySet()) {
@@ -407,7 +409,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
         if (fileHandler.hasAllPieces()) {
             fileHandler.aggregateAllPieces();
             try {
-                Logger.logCompleteFileDownloaded(peerID);
+                logger.logCompleteFileDownloaded(peerID);
                 for (Integer peerID : connections.keySet()) {
                     connections.get(peerID).sendActualMessage(MessageFactory.notInterestedMessage());
                 }
@@ -436,7 +438,7 @@ public class Peer implements ConnectionProvider, MessageHandler {
 
     private ActualMessage responseForHave(ActualMessage message, int otherPeerID) {
         int pieceIndex = ByteBuffer.wrap(message.getPayload()).getInt();
-        Logger.logReceivedHaveMessage(peerID, otherPeerID, pieceIndex);
+        logger.logReceivedHaveMessage(peerID, otherPeerID, pieceIndex);
 
         // Set the current peer to know that the other peer has this given bit
         BitSet peerBitSet = otherPeerBitfields.get(otherPeerID);
