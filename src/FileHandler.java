@@ -117,7 +117,7 @@ public class FileHandler {
 
     // Returns indices of missing pieces given two BitSets
     public ArrayList<Integer> getMissingPieces(BitSet myBitSet, BitSet otherBitSet) {
-        BitSet missingPieces = otherBitSet;
+        BitSet missingPieces = (BitSet)otherBitSet.clone();
         missingPieces.andNot(myBitSet);
         ArrayList<Integer> missingPieceIndices = new ArrayList();
         for (int i = missingPieces.nextSetBit(0); i != -1; i = missingPieces.nextSetBit(i + 1)) {
