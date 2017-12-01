@@ -1,7 +1,3 @@
-import configs.CommonConfig;
-import configs.PeerInfoConfig;
-import util.Constants;
-
 import java.util.List;
 
 public class PeerProcess {
