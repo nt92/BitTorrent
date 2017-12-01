@@ -31,12 +31,18 @@ public class FileHandler {
     }
 
     public int getPiecesCount() {
-        return piecesCount;
+        int count = 0;
+        for(int i = 0; i < this.piecesCount; i++){
+            if (hasPiece(i)) {
+                count++;
+            }
+        }
+        return count;
     }
 
     public boolean hasPiece(int pieceIndex) {
         byte[] bytes = pieces.get(pieceIndex);
-        return bytes != null && bytes.length != 0;
+        return bytes != null;
     }
 
     public boolean hasAllPieces() {
