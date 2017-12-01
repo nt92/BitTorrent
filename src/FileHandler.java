@@ -18,7 +18,7 @@ public class FileHandler {
 
     public FileHandler(int peerID, CommonConfig config) {
         this.peerID = peerID;
-        this.peerDirectory = System.getProperty("user.home") + "/project/peer_" + this.peerID + "/";
+        this.peerDirectory = "peer_" + this.peerID + "/";
         this.fileName = config.getFileName();
         this.fileSize = config.getFileSize();
         this.pieceSize = config.getPieceSize();
