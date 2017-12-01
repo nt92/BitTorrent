@@ -22,7 +22,7 @@ public class FileHandler {
 
     public FileHandler(int peerID, CommonConfig config) {
         this.peerID = peerID;
-        this.peerDirectory = "~/project/peer_" + this.peerID + "/";
+        this.peerDirectory = System.getProperty("user.home") + "/project/peer_" + this.peerID + "/";
         this.fileName = config.getFileName();
         this.fileSize = config.getFileSize();
         this.pieceSize = config.getPieceSize();
@@ -79,7 +79,9 @@ public class FileHandler {
             for( ; i + this.pieceSize <= this.fileSize; i += this.pieceSize) {
                 filePieces.add(new FilePiece(i/this.pieceSize, Arrays.copyOfRange(data, i, i + this.pieceSize)));
             }
-            filePieces.add(new FilePiece(i/this.pieceSize, Arrays.copyOfRange(data, i, this.fileSize - 1)));
+            if (i < this.fileSize) {
+                filePieces.add(new FilePiece(i/this.pieceSize, Arrays.copyOfRange(data, i, this.fileSize - 1)));
+            }
             for (FilePiece piece : filePieces) {
                 pieces.put(piece.pieceIndex, piece.data);
             }

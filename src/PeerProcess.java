@@ -19,7 +19,5 @@ public class PeerProcess {
         } catch (Exception e){
             e.printStackTrace();
         }
-//        FileHandler fh = new FileHandler(1001, commonConfig);
-//        fh.aggregateAllPieces();
     }
 }
