@@ -198,7 +198,7 @@ public class Peer implements MessageHandler {
                 }
 
                 preferredNeighbors = nextPreferredNeighbors;
-                if (preferredNeighbors.isEmpty()) {
+                if (!preferredNeighbors.isEmpty()) {
                     logger.logChangedPreferredNeighbors(peerID, preferredNeighbors);
                 }
 
