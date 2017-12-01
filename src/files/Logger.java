@@ -83,7 +83,7 @@ public class Logger {
     }
 
     public void logPieceDownloaded(int peerID, int otherID, int pieceIndex, int totalPieces) {
-        append("Peer " + peerID + " has downloaded the piece " + pieceIndex + " from " + otherID + ". Now the number of pieces it has it " + totalPieces + "."  + "\n");
+        append("Peer " + peerID + " has downloaded the piece " + pieceIndex + " from " + otherID + ". Now the number of pieces it has is " + totalPieces + "."  + "\n");
     }
 
     public void logCompleteFileDownloaded(int peerID) {

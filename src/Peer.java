@@ -95,12 +95,11 @@ public class Peer implements MessageHandler {
 
         // Set all other bitfields to empty ones by default
         for (int i = 0; i < peerList.size(); i++) {
-            int otherID = peerList.get(peerIndex).getPeerID();
+            int otherID = peerList.get(i).getPeerID();
             if (otherID != peerID) {
                 otherPeerBitfields.put(otherID, new BitSet());
             }
         }
-
 
         // If the current peer has the file, chunk it
         if (currentPeerInfo.getHasFile()) {
@@ -143,6 +142,7 @@ public class Peer implements MessageHandler {
                     if (interested.size() > 0) {
                         while (true) {
                             //get random interested value
+                            if (interested.isEmpty()) { break; }
                             Integer newPreferredNeighbor;
                             int randomIndex = interested.size() > 1 ? random.nextInt(interested.size()) : 0;
                             newPreferredNeighbor = interested.get(randomIndex);
@@ -226,6 +226,7 @@ public class Peer implements MessageHandler {
                 Integer newOptimisticallyUnchokedNeighbor = -1;
                 if (interested.size() > 0) {
                     while (true) {
+                        if (interested.isEmpty()) { break; }
                         int randomIndex = interested.size() > 1 ? new Random().nextInt(interested.size()) : 0;
                         newOptimisticallyUnchokedNeighbor = interested.get(randomIndex);
                         if (newOptimisticallyUnchokedNeighbor != optimisticallyUnchokedNeighbor &&
@@ -323,7 +324,6 @@ public class Peer implements MessageHandler {
     // MessageHandler
 
     public void handleActualMessage(ActualMessage message, int otherPeerID) {
-        System.out.println(peerID + " received " + message.getType() + " from " + otherPeerID);
         ClientConnection connection = connectionForPeerID(otherPeerID);
         ActualMessage actualMessage;
         switch (message.getType()) {
@@ -457,16 +457,8 @@ public class Peer implements MessageHandler {
         }
 
         fileHandler.setPiece(pieceIndex, pieceBytes);
-        logger.logPieceDownloaded(peerID, otherPeerID, pieceIndex, numPieces);
-
-        // Update all peers that current peer has new piece
-        for (Integer peerID : connections.keySet()) {
-            try {
-                connections.get(peerID).sendActualMessage(MessageFactory.haveMessage(pieceIndex));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        bitField.set(pieceIndex);
+        logger.logPieceDownloaded(peerID, otherPeerID, pieceIndex, fileHandler.getPiecesCount());
 
         // If the file is completed, save the FileHandler pieces to disk and send out NOT_INTERESTED
         if (fileHandler.hasAllPieces()) {
@@ -479,14 +471,23 @@ public class Peer implements MessageHandler {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return null;
+            terminateIfNeeded();
+        }
+
+        // Update all peers that current peer has new piece
+        for (Integer peerID : connections.keySet()) {
+            try {
+                connections.get(peerID).sendActualMessage(MessageFactory.haveMessage(pieceIndex));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         // Record that we got the piece from the specific peer (for choosing who our best friend is)
         peerDownloadRates.put(otherPeerID, peerDownloadRates.containsKey(otherPeerID) ? peerDownloadRates.get(otherPeerID) + 1 : 1);
 
         // Now that piece was recieved, we request another piece from the server
-        return requestPieceFrom(otherPeerID);
+        return !fileHandler.hasAllPieces() ? requestPieceFrom(otherPeerID) : null;
     }
 
     private ActualMessage requestPieceFrom(int otherPeerID) {
@@ -507,21 +508,27 @@ public class Peer implements MessageHandler {
         peerBitSet.set(pieceIndex);
         otherPeerBitfields.put(otherPeerID, peerBitSet);
 
+        terminateIfNeeded();
+
         // If we already have this piece, no need to do anything
         if (bitField.get(pieceIndex)) {
             return null;
         }
-//
-//        boolean someoneMissingFile = true;
-//        for (BitSet bitfield : otherPeerBitfields.values()) {
-//            someoneMissingFile = someoneMissingFile && fileHandler.getMissingPieces(bitfield, allTrueBitfield).isEmpty();
-//        }
-//
-//        if (!someoneMissingFile) {
-//            System.out.println("FINISHED! All peers downloaded the file.");
-//            System.exit(1);
-//        }
-
         return MessageFactory.interestedMessage();
+    }
+
+    private void terminateIfNeeded() {
+        System.out.println("----- " + peerID + " " + bitField.toString() + " -----");
+        boolean everybodyHasAllPieces = fileHandler.hasAllPieces();
+        for (Integer peerID : otherPeerBitfields.keySet()) {
+            BitSet bitfield = otherPeerBitfields.get(peerID);
+            boolean hasAllPieces = bitfield.cardinality() == numPieces;
+            System.out.println(peerID + " has bitfield: " + bitfield.toString() + ", all pieces: " + hasAllPieces);
+            everybodyHasAllPieces = everybodyHasAllPieces && hasAllPieces;
+        }
+        if (everybodyHasAllPieces) {
+            System.out.println("FINISHED! All peers downloaded the file.");
+            System.exit(1);
+        }
     }
 }

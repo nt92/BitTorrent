@@ -34,7 +34,6 @@ public class ClientConnection {
 
         while (true) {
             while (!handshakeQueue.isEmpty()) {
-                //System.out.println(peerID + " is sending handshake to " + peerInfoConfig.getPeerID());
                 byte[] outBytes = handshakeQueue.poll().toBytes();
                 try {
                     out.write(outBytes);
@@ -46,7 +45,6 @@ public class ClientConnection {
 
             while (!messageQueue.isEmpty()) {
                 ActualMessage message = messageQueue.poll();
-                System.out.println(peerID + " is sending " + message.getType() + " to " + peerInfoConfig.getPeerID());
                 byte[] outBytes = message.toBytes();
                 try {
                     out.write(outBytes);
