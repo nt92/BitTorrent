@@ -518,16 +518,13 @@ public class Peer implements MessageHandler {
     }
 
     private void terminateIfNeeded() {
-        System.out.println("----- " + peerID + " " + bitField.toString() + " -----");
         boolean everybodyHasAllPieces = fileHandler.hasAllPieces();
         for (Integer peerID : otherPeerBitfields.keySet()) {
             BitSet bitfield = otherPeerBitfields.get(peerID);
             boolean hasAllPieces = bitfield.cardinality() == numPieces;
-            System.out.println(peerID + " has bitfield: " + bitfield.toString() + ", all pieces: " + hasAllPieces);
             everybodyHasAllPieces = everybodyHasAllPieces && hasAllPieces;
         }
         if (everybodyHasAllPieces) {
-            System.out.println("FINISHED! All peers downloaded the file.");
             System.exit(1);
         }
     }
