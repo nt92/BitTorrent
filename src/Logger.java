@@ -16,10 +16,7 @@ public class Logger {
     public Logger(int peerID) throws Exception {
         this.peerID = peerID;
         this.file = new File("log_peer_" + this.peerID + ".log");
-        if(!file.getParentFile().exists()){
-            file.getParentFile().mkdirs();
-        }
-        if(file.exists()){
+        if (file.exists()) {
             file.delete();
         }
         file.createNewFile();
