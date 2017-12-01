@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -42,15 +43,8 @@ public class Logger {
         append("Peer " + peerID + " is connected from Peer " + otherPeerID + "\n");
     }
 
-    public void logChangedPreferredNeighbors(int peerID, Object[] neighbors) {
-        StringBuilder builder = new StringBuilder();
-        String sep = "";
-        for (Object id : neighbors) {
-            builder.append(sep);
-            builder.append(id);
-            sep = ",";
-        }
-        append("Peer " + peerID + " has the preferred neighbors " + builder.toString() + "\n");
+    public void logChangedPreferredNeighbors(int peerID, ArrayList<Integer> neighbors) {
+        append("Peer " + peerID + " has the preferred neighbors " + neighbors + "\n");
     }
 
     public void logChangeOptimisticallyUnchokedNeighbor(int peerID, int otherID) {
