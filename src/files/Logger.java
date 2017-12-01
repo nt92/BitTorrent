@@ -17,7 +17,7 @@ public class Logger {
 
     public Logger(int peerID) throws Exception {
         this.peerID = peerID;
-        this.file = new File("~/project/log_peer_" + this.peerID + ".log");
+        this.file = new File(System.getProperty("user.home") + "/project/log_peer_" + this.peerID + ".log");
         if(!file.getParentFile().exists()){
             file.getParentFile().mkdirs();
         }
@@ -34,9 +34,6 @@ public class Logger {
         try {
             String finalString = dateFormat.format(new Date()).concat(": " + string);
             outputStream.write(finalString.getBytes("ASCII"));
-//            if (peerID == 1001) {
-//                System.out.println(finalString);
-//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -89,7 +86,7 @@ public class Logger {
         append("Peer " + peerID + " has downloaded the piece " + pieceIndex + " from " + otherID + ". Now the number of pieces it has it " + totalPieces + "."  + "\n");
     }
 
-    public void logCompleteFileDownloaded(int peerID) throws Exception {
+    public void logCompleteFileDownloaded(int peerID) {
         append("Peer " + peerID + " has downloaded the complete file."  + "\n");
     }
 }
